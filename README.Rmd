@@ -89,3 +89,26 @@ intro_comm_resp = correct_respiration(intro_comm)
 # Look at the new values for overflow respiration:
 intro_comm_resp$prop$Carbon
 ```
+You can run the analyzes on your own food webs easily by using the `build_foodweb` function to get them into the right format.
+
+The function requires two inputs. First is a feeding list of predator-prey relationships.
+
+```{r example7}
+# Feeding list example for the introductory community:
+feedinglist
+```
+The second is a properties dataframe listing the necessary parameters.
+
+```{r example8}
+# Feeding list example for the introductory community:
+head(properties_example1)
+# Only printing the head of this file as an example.
+```
+
+These two files can be put into the function to create your new food web.
+
+```{r example9}
+yourfoodweb = build_foodweb(feeding = feedinglist, properties = properties_example1)
+
+str(yourfoodweb)
+```

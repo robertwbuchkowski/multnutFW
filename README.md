@@ -148,3 +148,110 @@ intro_comm_resp$prop$Carbon
 #> 13 1 0.00000000
 #> 17 1 0.00000000
 ```
+
+You can run the analyzes on your own food webs easily by using the
+`build_foodweb` function to get them into the right format.
+
+The function requires two inputs. First is a feeding list of
+predator-prey relationships.
+
+``` r
+# Feeding list example for the introductory community:
+feedinglist
+#>   Predator     Prey Preference
+#> 1     Pred    Prey1        1.0
+#> 2     Pred    Prey2        1.2
+#> 3    Prey1    Prey2        1.0
+#> 4    Prey2 Microbe1        1.0
+#> 5    Prey2 Detritus        1.0
+#> 6    Prey1 Detritus        1.0
+#> 7 Microbe1 Detritus        1.0
+```
+
+The second is a properties dataframe listing the necessary parameters.
+
+``` r
+# Feeding list example for the introductory community:
+head(properties_example1)
+#>      ID Element Parameter Value
+#> 1  Pred  Carbon         a  0.61
+#> 2  Pred  Carbon         E  0.20
+#> 3  Pred  Carbon         Q  0.50
+#> 4  Pred  Carbon    canIMM  0.00
+#> 5 Prey1  Carbon         a  0.65
+#> 6 Prey1  Carbon         E  0.10
+# Only printing the head of this file as an example.
+```
+
+These two files can be put into the function to create your new food
+web.
+
+``` r
+yourfoodweb = build_foodweb(feeding = feedinglist, properties = properties_example1)
+
+str(yourfoodweb)
+#> List of 2
+#>  $ imat: num [1:5, 1:5] 0 0 0 0 0 1 0 0 0 0 ...
+#>   ..- attr(*, "dimnames")=List of 2
+#>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>  $ prop:List of 4
+#>   ..$ Carbon    :'data.frame':   5 obs. of  12 variables:
+#>   .. ..$ ID               : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ a                : num [1:5] 0.61 0.65 0.45 0.8 1
+#>   .. ..$ E                : num [1:5] 0.2 0.1 0.05 0.05 0
+#>   .. ..$ Q                : num [1:5] 0.5 0.5 0.5 0.5 0.5
+#>   .. ..$ canIMM           : num [1:5] 0 0 0 0 0
+#>   .. ..$ d                : num [1:5] 1 3 0.5 0.2 0
+#>   .. ..$ B                : num [1:5] 0.1 8 5 20 100
+#>   .. ..$ DetritusRecycling: num [1:5] 0 0 0 0 1
+#>   .. ..$ isDetritus       : num [1:5] 0 0 0 0 1
+#>   .. ..$ isPlant          : num [1:5] 0 0 0 0 0
+#>   .. ..$ p                : num [1:5] 1 1 1 1 1
+#>   .. ..$ Ehat             : num [1:5] 0 0 0 0 0
+#>   .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. ..$ v.names: NULL
+#>   .. .. ..$ timevar: chr "Parameter"
+#>   .. .. ..$ idvar  : chr "ID"
+#>   .. .. ..$ times  : chr [1:11] "a" "E" "Q" "canIMM" ...
+#>   .. .. ..$ varying: chr [1, 1:11] "Value.a" "Value.E" "Value.Q" "Value.canIMM" ...
+#>   ..$ Nitrogen  :'data.frame':   5 obs. of  6 variables:
+#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ a     : num [1:5] 0.7 0.7 0.7 0.7 1
+#>   .. ..$ Q     : num [1:5] 0.111 0.104 0.1 0.1 0.025
+#>   .. ..$ canIMM: num [1:5] 0 0 0 1 0
+#>   .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. ..$ v.names: NULL
+#>   .. .. ..$ timevar: chr "Parameter"
+#>   .. .. ..$ idvar  : chr "ID"
+#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
+#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
+#>   ..$ Phosphorus:'data.frame':   5 obs. of  6 variables:
+#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ a     : num [1:5] 0.8 0.8 0.8 0.8 1
+#>   .. ..$ Q     : num [1:5] 0.015 0.01 0.008 0.008 0.008
+#>   .. ..$ canIMM: num [1:5] 0 0 0 1 0
+#>   .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. ..$ v.names: NULL
+#>   .. .. ..$ timevar: chr "Parameter"
+#>   .. .. ..$ idvar  : chr "ID"
+#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
+#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
+#>   ..$ Calcium   :'data.frame':   5 obs. of  6 variables:
+#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ a     : num [1:5] 0.8 0.8 0.8 0.8 1
+#>   .. ..$ Q     : num [1:5] 0.01 0.011 0.009 0.009 0.009
+#>   .. ..$ canIMM: num [1:5] 0 0 0 0 0
+#>   .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. ..$ v.names: NULL
+#>   .. .. ..$ timevar: chr "Parameter"
+#>   .. .. ..$ idvar  : chr "ID"
+#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
+#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
+```
