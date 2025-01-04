@@ -38,6 +38,10 @@ intro_comm$imat
 #> Prey2       0     0   0.0        1        1
 #> Microbe1    0     0   0.0        0        1
 #> Detritus    0     0   0.0        0        0
+
+# The introductory community has 4 chemical elements:
+names(intro_comm$prop)
+#> [1] "Carbon"     "Nitrogen"   "Phosphorus" "Calcium"
 ```
 
 This introductory analyis outputs several important features of the food

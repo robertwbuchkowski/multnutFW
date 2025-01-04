@@ -43,6 +43,9 @@ intro_analysis = comana(intro_comm)
 # The analysis is run on the food web included in the package with this feeding matrix:
 intro_comm$imat
 
+# The introductory community has 4 chemical elements:
+names(intro_comm$prop)
+
 ```
 
 This introductory analyis outputs several important features of the food web. First, it outputs the total consumption rate for each species in units of carbon.
