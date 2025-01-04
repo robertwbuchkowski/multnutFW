@@ -32,12 +32,57 @@ pak::pak("robertwbuchkowski/multnutFW")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example analyzing the introductory food web:
 
-```{r example}
+```{r example1}
 library(multnutFW)
 
 # Run the food web analysis of the introductory community:
-comana(intro_comm)
+intro_analysis = comana(intro_comm)
 
+# The analysis is run on the food web included in the package with this feeding matrix:
+intro_comm$imat
+
+```
+
+This introductory analyis outputs several important features of the food web. First, it outputs the total consumption rate for each species in units of carbon.
+
+```{r example2}
+intro_analysis$consumption
+```
+
+It also outputs matricies of carbon (and any other nutrient) flow throughout the food web. To get the output matrix for another element, simply put that element's name in the place of "Carbon".
+
+```{r example3}
+intro_analysis$fmat$Carbon
+```
+
+It also outputs the mineralization rate for each species and each element. We can make a graph to show these data more clearly.
+
+```{r example4}
+# Data on mineralization rates:
+intro_analysis$mineralization
+```
+Notice how some of the mineralization rates are negative. Microbe1 can immobilize nitrogen (canIMM = 1), but the other taxa cannot. 
+
+The package offers two options: correct diet or correct respiration.
+
+To correct the diet, organisms shift their diet towards less abundant, nutrient rich food. Notice the changes in feeding preferences.
+
+```{r example5}
+# Correct the diet
+intro_comm_diet = correct_diet(intro_comm)
+
+intro_comm_diet$imat
+```
+The other option is to correct respiration by increasing the overflow respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to remove the excess carbon. This change has to occur simultaneously with changes in feeding rate, because it often means that more volume needs to be eaten to overcome nutrient limitation.
+
+Whenever the respiration term is reduced, this means that the organism is suffering elemental limitaiton from something other than carbon. The function automatically prints the element that is most limiting for each species.
+
+```{r example6}
+# Correct the diet
+intro_comm_resp = correct_respiration(intro_comm)
+
+# Look at the new values for overflow respiration:
+intro_comm_resp$prop$Carbon
 ```

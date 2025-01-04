@@ -22,94 +22,125 @@ pak::pak("robertwbuchkowski/multnutFW")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example analyzing the introductory food web:
 
 ``` r
 library(multnutFW)
 
 # Run the food web analysis of the introductory community:
-comana(intro_comm)
-#> $fmat
-#> $fmat$Carbon
+intro_analysis = comana(intro_comm)
+
+# The analysis is run on the food web included in the package with this feeding matrix:
+intro_comm$imat
+#>          Pred Prey1 Prey2 Microbe1 Detritus
+#> Pred        0     1   1.2        0        0
+#> Prey1       0     0   1.0        0        1
+#> Prey2       0     0   0.0        1        1
+#> Microbe1    0     0   0.0        0        1
+#> Detritus    0     0   0.0        0        0
+```
+
+This introductory analyis outputs several important features of the food
+web. First, it outputs the total consumption rate for each species in
+units of carbon.
+
+``` r
+intro_analysis$consumption
+#>       Pred      Prey1      Prey2   Microbe1   Detritus 
+#>  0.1967213 38.3267880 10.3542095  8.4071270 32.6700000
+```
+
+It also outputs matricies of carbon (and any other nutrient) flow
+throughout the food web. To get the output matrix for another element,
+simply put that element’s name in the place of “Carbon”.
+
+``` r
+intro_analysis$fmat$Carbon
 #>          Pred     Prey1      Prey2 Microbe1  Detritus
 #> Pred        0 0.1124122 0.08430913 0.000000  0.000000
 #> Prey1       0 0.0000000 1.82508514 0.000000 36.501703
 #> Prey2       0 0.0000000 0.00000000 1.725702  8.628508
 #> Microbe1    0 0.0000000 0.00000000 0.000000  8.407127
 #> Detritus    0 0.0000000 0.00000000 0.000000  0.000000
-#> 
-#> $fmat$Nitrogen
-#>          Pred      Prey1      Prey2  Microbe1  Detritus
-#> Pred        0 0.02338173 0.01686183 0.0000000 0.0000000
-#> Prey1       0 0.00000000 0.36501703 0.0000000 1.8250851
-#> Prey2       0 0.00000000 0.00000000 0.3451403 0.4314254
-#> Microbe1    0 0.00000000 0.00000000 0.0000000 0.4203563
-#> Detritus    0 0.00000000 0.00000000 0.0000000 0.0000000
-#> 
-#> $fmat$Phosphorus
-#>          Pred       Prey1       Prey2   Microbe1  Detritus
-#> Pred        0 0.002248244 0.001348946 0.00000000 0.0000000
-#> Prey1       0 0.000000000 0.029201362 0.00000000 0.5840272
-#> Prey2       0 0.000000000 0.000000000 0.02761123 0.1380561
-#> Microbe1    0 0.000000000 0.000000000 0.00000000 0.1345140
-#> Detritus    0 0.000000000 0.000000000 0.00000000 0.0000000
-#> 
-#> $fmat$Calcium
-#>          Pred       Prey1       Prey2   Microbe1  Detritus
-#> Pred        0 0.002473068 0.001517564 0.00000000 0.0000000
-#> Prey1       0 0.000000000 0.032851533 0.00000000 0.6570307
-#> Prey2       0 0.000000000 0.000000000 0.03106263 0.1553131
-#> Microbe1    0 0.000000000 0.000000000 0.00000000 0.1513283
-#> Detritus    0 0.000000000 0.000000000 0.00000000 0.0000000
-#> 
-#> 
-#> $consumption
-#>       Pred      Prey1      Prey2   Microbe1   Detritus 
-#>  0.1967213 38.3267880 10.3542095  8.4071270 32.6700000 
-#> 
-#> $AIJ
-#> $AIJ$Carbon
-#> NULL
-#> 
-#> $AIJ$Nitrogen
-#>             [,1]        [,2]        [,3]        [,4]       [,5]
-#> [1,]  0.09000000  0.04585586  0.02063063  0.02063063 -0.4523423
-#> [2,]  0.09711538  0.05000000  0.02307692  0.02307692 -0.4817308
-#> [3,]  0.32700000  0.27800000  0.25000000  0.25000000 -0.2750000
-#> [4,] -0.02300000 -0.07200000 -0.10000000 -0.10000000 -0.6250000
-#> [5,]  3.44000000  3.16000000  3.00000000  3.00000000  0.0000000
-#> 
-#> $AIJ$Phosphorus
-#>       [,1]        [,2]       [,3]       [,4]       [,5]
-#> [1,] 0.190 -0.07666667 -0.1833333 -0.1833333 -0.1833333
-#> [2,] 0.550  0.15000000 -0.0100000 -0.0100000 -0.0100000
-#> [3,] 1.050  0.55000000  0.3500000  0.3500000  0.3500000
-#> [4,] 0.700  0.20000000  0.0000000  0.0000000  0.0000000
-#> [5,] 0.875  0.25000000  0.0000000  0.0000000  0.0000000
-#> 
-#> $AIJ$Calcium
-#>            [,1]      [,2]        [,3]        [,4]        [,5]
-#> [1,] 0.19000000 0.2700000 0.110000000 0.110000000 0.110000000
-#> [2,] 0.07727273 0.1500000 0.004545455 0.004545455 0.004545455
-#> [3,] 0.43888889 0.5277778 0.350000000 0.350000000 0.350000000
-#> [4,] 0.08888889 0.1777778 0.000000000 0.000000000 0.000000000
-#> [5,] 0.11111111 0.2222222 0.000000000 0.000000000 0.000000000
-#> 
-#> 
-#> $mineralization
-#> $mineralization$Carbon
+```
+
+It also outputs the mineralization rate for each species and each
+element. We can make a graph to show these data more clearly.
+
+``` r
+# Data on mineralization rates:
+intro_analysis$mineralization
+#> $Carbon
 #>     Pred    Prey1    Prey2 Microbe1 Detritus 
 #>     0.02     0.80     0.25     1.00     0.00 
 #> 
-#> $mineralization$Nitrogen
+#> $Nitrogen
 #>        Pred       Prey1       Prey2    Microbe1    Detritus 
 #>   0.1211446 -80.4897886  -8.4570714 -21.2722718   0.0000000 
 #> 
-#> $mineralization$Phosphorus
+#> $Phosphorus
 #>        Pred       Prey1       Prey2    Microbe1    Detritus 
 #>  -0.1358314  20.8366060 242.1233328  62.5000000   0.0000000 
 #> 
-#> $mineralization$Calcium
+#> $Calcium
 #>       Pred      Prey1      Prey2   Microbe1   Detritus 
 #>   2.981265  44.282394 215.220740  55.555556   0.000000
+```
+
+Notice how some of the mineralization rates are negative. Microbe1 can
+immobilize nitrogen (canIMM = 1), but the other taxa cannot.
+
+The package offers two options: correct diet or correct respiration.
+
+To correct the diet, organisms shift their diet towards less abundant,
+nutrient rich food. Notice the changes in feeding preferences.
+
+``` r
+# Correct the diet
+intro_comm_diet = correct_diet(intro_comm)
+
+intro_comm_diet$imat
+#>          Pred    Prey1   Prey2 Microbe1 Detritus
+#> Pred        0 2.041667   1.000 0.000000        0
+#> Prey1       0 0.000000 209.886 0.000000        1
+#> Prey2       0 0.000000   0.000 5.376607        1
+#> Microbe1    0 0.000000   0.000 0.000000        1
+#> Detritus    0 0.000000   0.000 0.000000        0
+```
+
+The other option is to correct respiration by increasing the overflow
+respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to
+remove the excess carbon. This change has to occur simultaneously with
+changes in feeding rate, because it often means that more volume needs
+to be eaten to overcome nutrient limitation.
+
+Whenever the respiration term is reduced, this means that the organism
+is suffering elemental limitaiton from something other than carbon. The
+function automatically prints the element that is most limiting for each
+species.
+
+``` r
+# Correct the diet
+intro_comm_resp = correct_respiration(intro_comm)
+#>         ID Limiting_nutrient
+#> 1     Pred        Phosphorus
+#> 2    Prey1          Nitrogen
+#> 3    Prey2          Nitrogen
+#> 4 Microbe1            Carbon
+#> 5 Detritus            Carbon
+
+# Look at the new values for overflow respiration:
+intro_comm_resp$prop$Carbon
+#>          ID    a    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant
+#> 1      Pred 0.61 0.20 0.5      0 1.0   0.1                 0          0       0
+#> 5     Prey1 0.65 0.10 0.5      0 3.0   8.0                 0          0       0
+#> 9     Prey2 0.45 0.05 0.5      0 0.5   5.0                 0          0       0
+#> 13 Microbe1 0.80 0.05 0.5      0 0.2  20.0                 0          0       0
+#> 17 Detritus 1.00 0.00 0.5      0 0.0 100.0                 1          1       0
+#>    p       Ehat
+#> 1  1 0.05097656
+#> 5  1 7.07486328
+#> 9  1 1.17282366
+#> 13 1 0.00000000
+#> 17 1 0.00000000
 ```
