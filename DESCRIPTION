@@ -2,10 +2,20 @@ Package: multnutFW
 Type: Package
 Title: Multiple Nutrient Food Web Analysis
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: c(person("Robert","Buchkowski", email = "robert.buchkowski@gmail.com",role = c("aut", "cre", "cph")),person("Zoë", "Lindo",role = c("aut")),person("Carlos", "Barreto",role = c("aut")))
+Maintainer: Robert Buchkowski <robert.buchkowski@gmail.com>
+Description: Analyzing food webs tracking any number of essential chemical elements at equilibrium.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.3.2
+Imports:
+  quadprog (>= 1.5-8),
+  lpSolve (>= 5.6.15)
+Depends: 
+    R (>= 3.5)
+Suggests: 
+    rmarkdown,
+    knitr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
