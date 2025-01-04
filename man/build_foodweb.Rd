@@ -17,18 +17,3 @@ A community that is compatible with the functions of the package. This is a list
 \description{
 A function to compile the food web from simple data inputs
 }
-\examples{
-# Creating a simple three node community:
-
-# Create a data frame of feeding relationships:
-feedinglist = data.frame(
- Predator = c("Pred", "Pred", "Prey1", "Prey2", "Prey2","Prey1", #'"Microbe1"),
- Prey = c("Prey1", "Prey2", "Prey2", "Microbe1","Detritus","Detritus","Detritus"),
- Preference = c(1,1.2,1,1,1,1,1))
-
-# Load in a data frame of properties for each species:
-# data(properties_example1)
-
-# Build the food web:
-build_foodweb(feeding = feedinglist, properties = properties_example1)
-}

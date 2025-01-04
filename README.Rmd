@@ -1,0 +1,43 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# multnutFW
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+The goal of multnutFW is to analyze food web models that contain a user-defined number of essential chemical elements at fixed proportions of the biomass of each node.
+
+## Installation
+
+You can install the development version of multnutFW from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("robertwbuchkowski/multnutFW")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(multnutFW)
+
+# Run the food web analysis of the introductory community:
+comana(intro_comm)
+
+```

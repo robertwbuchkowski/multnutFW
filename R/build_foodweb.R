@@ -3,20 +3,6 @@
 #' @param  feeding A data frame listing the feeding relationships in the food web. Only needs to contain the nodes that have prey items along with their names. Three columns in this data frame must be: Predator, Prey, and Preference. The Predator column is the name of the predator, the Prey column is the name of the prey, and the Preference is the preference that the predator has for that prey item after correcting for abundance. Preference values are relative, so for each predator the preference value can be any number and all that matters is its proportion of the total of all preference values given to that predator. Preference is meaningless if a predator only has one prey item. A good default value is 1 for everything if you don't want to set preferences beyond prey abundance.
 #' @param properties A data frame listing the properties or parameters in the food web for each element. Must contain the following columns: ID, Element,Parameter, Value. For Carbon, the following parameters are required for each node: a, E, Q, canIMM, d, B, Detritusrecycling, isDetritus, and isPlant. For every other element the following parameters are required for each node: a, Q, canIMM. You can also include the parameters p and Emin for each element and Ehat for carbon. If these are not present, the model sets them to be trivial values that do not affect the calculations.
 #' @return A community that is compatible with the functions of the package. This is a list with the feeding matrix imat first and the properties prop second. The properties list contains a data frame for every element.
-#' @examples
-#'# Creating a simple three node community:
-#'
-#'# Create a data frame of feeding relationships:
-#'feedinglist = data.frame(
-#'  Predator = c("Pred", "Pred", "Prey1", "Prey2", "Prey2","Prey1", #'"Microbe1"),
-#'  Prey = c("Prey1", "Prey2", "Prey2", "Microbe1","Detritus","Detritus","Detritus"),
-#'  Preference = c(1,1.2,1,1,1,1,1))
-#'
-#'# Load in a data frame of properties for each species:
-#'# data(properties_example1)
-#'
-#'# Build the food web:
-#'build_foodweb(feeding = feedinglist, properties = properties_example1)
 #' @export
 
 build_foodweb <- function(feeding,
@@ -70,7 +56,7 @@ build_foodweb <- function(feeding,
   if(!any(properties$Parameter == "Emin")){
     tdf = unique(properties[,c("ID", "Element")])
 
-    tdf = subset(tdf, Element != "Carbon")
+    tdf = subset(tdf, tdf$Element != "Carbon")
 
     tdf[,c("Parameter")] = c("Emin")
     tdf[,c("Value")] = c(0)
@@ -83,7 +69,7 @@ build_foodweb <- function(feeding,
   if(!any(properties$Parameter == "Ehat")){
     tdf = unique(properties[,c("ID", "Element")])
 
-    tdf = subset(tdf, Element == "Carbon")
+    tdf = subset(tdf, tdf$Element == "Carbon")
 
     tdf[,c("Parameter")] = c("Ehat")
     tdf[,c("Value")] = c(0)
@@ -103,7 +89,7 @@ build_foodweb <- function(feeding,
   for(i in 1:length(prop2)){
     prop2[[i]] = subset(properties, properties$Element == element_list[i])
 
-    prop2[[i]] = reshape(prop2[[i]][, c("ID", "Parameter", "Value")],
+    prop2[[i]] = stats::reshape(prop2[[i]][, c("ID", "Parameter", "Value")],
                          idvar = "ID",
                          timevar = "Parameter",
                          direction = "wide")

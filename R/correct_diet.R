@@ -3,6 +3,7 @@
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
 #' @return The modified community with new diet preferences.
+#' @export
 correct_diet <- function(usin,dietlimits = c(NA)){
 
   # Setting up and verifying diet limits
