@@ -124,7 +124,7 @@ correct_diet <- function(usin,dietlimits = c(NA)){
 
     usin$imat[sp,food] = FLIST2
 
-    if(sum((comana(usin,shuffleTL = F)$fmat$Carbon[sp,food]/(comana(usin,shuffleTL = F)$consumption[[sp]]) - FLIST)^2) > 1e-10) stop("Check quadratic optimization. There is an issue.")
+    if(sum((comana(usin)$fmat$Carbon[sp,food]/(comana(usin)$consumption[[sp]]) - FLIST)^2) > 1e-10) stop("Check quadratic optimization. There is an issue.")
 
   }
 
