@@ -48,13 +48,13 @@ names(intro_comm$prop)
 
 ```
 
-This introductory analyis outputs several important features of the food web. First, it outputs the total consumption rate for each species in units of carbon.
+This introductory analysis outputs several important features of the food web. First, it outputs the total consumption rate for each species in units of carbon.
 
 ```{r example2}
 intro_analysis$consumption
 ```
 
-It also outputs matricies of carbon (and any other nutrient) flow throughout the food web. To get the output matrix for another element, simply put that element's name in the place of "Carbon".
+It also outputs matrices of carbon (and any other nutrient) flow throughout the food web. To get the output matrix for another element, simply put that element's name in the place of "Carbon".
 
 ```{r example3}
 intro_analysis$fmat$Carbon
@@ -66,7 +66,8 @@ It also outputs the mineralization rate for each species and each element. We ca
 # Data on mineralization rates:
 intro_analysis$mineralization
 ```
-Notice how some of the mineralization rates are negative. Microbe1 can immobilize nitrogen (canIMM = 1), but the other taxa cannot. 
+
+Notice how some of the mineralization rates are negative. Microbe1 can immobilize nitrogen (canIMM = 1), but the other taxa cannot.
 
 The package offers two options: correct diet or correct respiration.
 
@@ -78,6 +79,7 @@ intro_comm_diet = correct_diet(intro_comm)
 
 intro_comm_diet$imat
 ```
+
 The other option is to correct respiration by increasing the overflow respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to remove the excess carbon. This change has to occur simultaneously with changes in feeding rate, because it often means that more volume needs to be eaten to overcome nutrient limitation.
 
 Whenever the respiration term is reduced, this means that the organism is suffering elemental limitaiton from something other than carbon. The function automatically prints the element that is most limiting for each species.
@@ -89,6 +91,18 @@ intro_comm_resp = correct_respiration(intro_comm)
 # Look at the new values for overflow respiration:
 intro_comm_resp$prop$Carbon
 ```
+
+### Calculating effects on nutrient mineralization
+
+You can calculate the direct and indirect effects of each organism on mineralization using the built in function. This function allows you to customize the output to include whichever food web nodes and elements that are of interest.
+
+```{r}
+# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
+whomineralizes(intro_comm_resp)
+```
+
+### Using your own food web
+
 You can run the analyzes on your own food webs easily by using the `build_foodweb` function to get them into the right format.
 
 The function requires two inputs. First is a feeding list of predator-prey relationships.
@@ -97,6 +111,7 @@ The function requires two inputs. First is a feeding list of predator-prey relat
 # Feeding list example for the introductory community:
 feedinglist
 ```
+
 The second is a properties dataframe listing the necessary parameters.
 
 ```{r example8}

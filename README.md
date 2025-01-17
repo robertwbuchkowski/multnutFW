@@ -44,9 +44,9 @@ names(intro_comm$prop)
 #> [1] "Carbon"     "Nitrogen"   "Phosphorus" "Calcium"
 ```
 
-This introductory analyis outputs several important features of the food
-web. First, it outputs the total consumption rate for each species in
-units of carbon.
+This introductory analysis outputs several important features of the
+food web. First, it outputs the total consumption rate for each species
+in units of carbon.
 
 ``` r
 intro_analysis$consumption
@@ -54,7 +54,7 @@ intro_analysis$consumption
 #>  0.1967213 38.3267880 10.3542095  8.4071270 32.6700000
 ```
 
-It also outputs matricies of carbon (and any other nutrient) flow
+It also outputs matrices of carbon (and any other nutrient) flow
 throughout the food web. To get the output matrix for another element,
 simply put that element’s name in the place of “Carbon”.
 
@@ -148,6 +148,41 @@ intro_comm_resp$prop$Carbon
 #> 13 1 0.00000000
 #> 17 1 0.00000000
 ```
+
+### Calculating effects on nutrient mineralization
+
+You can calculate the direct and indirect effects of each organism on
+mineralization using the built in function. This function allows you to
+customize the output to include whichever food web nodes and elements
+that are of interest.
+
+``` r
+# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
+whomineralizes(intro_comm_resp)
+#>          ID    Element        Direct      Indirect
+#> 1      Pred     Carbon  3.888811e-04  0.000000e+00
+#> 2     Prey1     Carbon  8.893799e-01 -1.376207e-17
+#> 3     Prey2     Carbon  9.473654e-02  0.000000e+00
+#> 4  Microbe1     Carbon  1.549472e-02  0.000000e+00
+#> 5  Detritus     Carbon  0.000000e+00  0.000000e+00
+#> 6      Pred   Nitrogen -4.083241e-03  2.070124e-02
+#> 7     Prey1   Nitrogen  0.000000e+00  5.799253e-01
+#> 8     Prey2   Nitrogen  0.000000e+00  1.806213e-01
+#> 9  Microbe1   Nitrogen  1.004083e+00 -4.005648e-01
+#> 10 Detritus   Nitrogen  0.000000e+00  2.046118e+01
+#> 11     Pred Phosphorus  5.833179e-20  1.160009e-03
+#> 12    Prey1 Phosphorus  7.079718e-01  7.188048e-02
+#> 13    Prey2 Phosphorus  2.762660e-01 -6.176048e-05
+#> 14 Microbe1 Phosphorus  1.576218e-02 -1.146850e-16
+#> 15 Detritus Phosphorus  0.000000e+00 -1.448479e+00
+#> 16     Pred    Calcium  9.053197e-04  1.146800e-03
+#> 17    Prey1    Calcium  7.184487e-01  6.923348e-02
+#> 18    Prey2    Calcium  2.654982e-01 -1.993322e-04
+#> 19 Microbe1    Calcium  1.514783e-02 -1.239919e-16
+#> 20 Detritus    Calcium  0.000000e+00 -1.392023e+00
+```
+
+### Using your own food web
 
 You can run the analyzes on your own food webs easily by using the
 `build_foodweb` function to get them into the right format.
