@@ -9,7 +9,7 @@ build_foodweb <- function(feeding,
                           properties){
 
   # Check that feeding has the right columns and values:
-  if(!all(colnames(feeding) %in% c("Predator", "Prey", "Preference"))) stop("feeding needs to have the columns: Predator, Prey, and Preference")
+  if(!all(colnames(feeding) %in% c("Predator", "Prey", "Preference",paste0("a",unique(properties$Element))))) stop("feeding needs to have the columns: Predator, Prey, and Preference. Also, all elements need to have assimilation efficiencies for each trophic interaction. Add the colnumes as aElement for each Element in the properties data frame.")
 
   # Check that all of the feeding columns are the right type:
   if(!inherits(feeding$Preference, "numeric")) stop("feeding Preference needs to be numeric")
@@ -25,7 +25,7 @@ build_foodweb <- function(feeding,
   if(any(is.na(properties$Value))) stop("No values in the properties data frame can be NA")
 
   # Check that all of the properties are present:
-  if(!all(c("d","a","B", "Q", "DetritusRecycling", "isDetritus", "isPlant", "canIMM") %in% unique(properties$Parameter))) stop("The properties data frame must contain all of the following columns: ID, d,a,p,B, CN, DetritusRecycling, isDetritus, isPlant, and canIMM.")
+  if(!all(c("d","B", "Q", "DetritusRecycling", "isDetritus", "isPlant", "canIMM") %in% unique(properties$Parameter))) stop("The properties data frame must contain all of the following columns: ID, d,p,B, CN, DetritusRecycling, isDetritus, isPlant, and canIMM.")
 
   # Check that all of the feeding relationships are listed in the properties data frame:
   if(!(all(unique(c(feeding$Predator, feeding$Prey)) %in% properties$ID))) stop("Node names listed in 'feeding' are not present in the properties data frame as listed in the ID column. All nodes in the feeding matrix must have properties.")
@@ -97,8 +97,28 @@ build_foodweb <- function(feeding,
     names(prop2[[i]]) <- gsub("Value.", "", names(prop2[[i]]))
   }
 
-  properties = prop2; rm(prop2)
+  properties_temp = prop2; rm(prop2)
 
+  # Create the assimilation efficiency matricies using the data from properties as a guide:
+
+  aelist = vector(mode = "list", length = length(element_list))
+
+  aemat = matrix(0,
+                         dimnames = list(unique(properties$ID), unique(properties$ID)),
+                         ncol = length(unique(properties$ID)), nrow = length(unique(properties$ID)), byrow = TRUE)
+
+  #Run through the feeding list and add in the non-zero feeding links identified there.
+
+  for(jj in 1:length(element_list)){
+    for(i in 1:dim(feeding)[1]){
+      aemat[feeding$Predator[i],feeding$Prey[i]] = feeding[i, paste0("a", element_list[jj])]
+    }
+    aelist[[jj]] = aemat
+  }
+
+  names(aelist) = element_list
+
+  properties = list(general = properties_temp, assimilation = aelist)
 
   # Build the community
   community <- list(imat = feedingmatrix,

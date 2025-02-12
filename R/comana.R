@@ -10,16 +10,24 @@ comana <- function(usin){
 
   # Separate the imat and prop:
   imat = usin$imat # row values of imat sets predator feeding preferences!
-  prop = usin$prop # properties of each trophic species
+  prop = usin$prop$general # properties of each trophic species
+  assim = usin$prop$assimilation # the assimilation efficiencies
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
-  # Create a vector for the consumption rates
+  # Calculate the preference matrix using biomass re-scaling:
   temp_mat =
     -1*t(imat)*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes)/matrix(rowSums(imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow = T)), nrow = Nnodes, ncol = Nnodes, byrow = T)
 
   temp_mat[!is.finite(temp_mat)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 
-  diag(temp_mat) = prop$Carbon$a*prop$Carbon$p + diag(temp_mat) # Add in a*p term
+  # Save the preference matrix:
+  preference_matrix = -1*t(temp_mat)
+
+  # Calculate the vector weighted assimilation efficiencies:
+  assimpref = rowSums(assim$Carbon*preference_matrix)
+
+  # Create a vector for the consumption rates
+  diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
   consumption = base::solve(temp_mat,(prop$Carbon$d*prop$Carbon$B + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B))
 
@@ -95,5 +103,5 @@ comana <- function(usin){
       as.numeric(rowSums(imat)>0) # Make X mineralization zero for all nodes without prey items.
   }
 
-  return(list(fmat = fmat, consumption = consumption, AIJ = AIJ, mineralization = mineralization))
+  return(list(fmat = fmat, consumption = consumption, AIJ = AIJ, mineralization = mineralization, preferences = preference_matrix))
 }
