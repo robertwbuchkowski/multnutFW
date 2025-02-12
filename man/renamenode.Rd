@@ -20,5 +20,5 @@ The community with the new name.
 Rename a node in a  community.
 }
 \examples{
-renamenode(intro_comm, oldname = "Predator", newname = "NewPredator")
+renamenode(intro_comm, oldname = "Pred", newname = "NewPredator")
 }

@@ -5,7 +5,7 @@
 #' @return The modified community with new diet preferences.
 #' @export
 correct_diet <- function(usin,dietlimits = c(NA)){
-
+  stop("BROKEN FOR NOW")
   # Setting up and verifying diet limits
   if(any(is.na(dietlimits))){
     dietlimits = usin$imat

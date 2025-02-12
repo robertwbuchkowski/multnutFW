@@ -5,7 +5,7 @@
 \alias{feedinglist}
 \title{The feeding list for an example community}
 \format{
-A single dataframe with columns Predator, Prey, Preference.
+A single dataframe with columns Predator, Prey, Preference, aCarbon, aNitrogen, aPhosphorus, and aCalcium. The columns beginning in a are the assimilation efficiencies for each trophic interaction for that element.
 \describe{
   \item{feedinglist}{The entire dataframe.}
 }

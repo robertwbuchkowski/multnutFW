@@ -16,8 +16,8 @@ You can install the development version of multnutFW from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("robertwbuchkowski/multnutFW")
+# install.packages("devtools")
+devtools::install_github("robertwbuchkowski/multnutFW@development")
 ```
 
 ## Example
@@ -41,7 +41,7 @@ intro_comm$imat
 
 # The introductory community has 4 chemical elements:
 names(intro_comm$prop)
-#> [1] "Carbon"     "Nitrogen"   "Phosphorus" "Calcium"
+#> [1] "general"      "assimilation"
 ```
 
 This introductory analysis outputs several important features of the
@@ -100,16 +100,10 @@ To correct the diet, organisms shift their diet towards less abundant,
 nutrient rich food. Notice the changes in feeding preferences.
 
 ``` r
-# Correct the diet
-intro_comm_diet = correct_diet(intro_comm)
+# Correct the diet NOT WORKING YET FOR THIS VERSION
+#intro_comm_diet = correct_diet(intro_comm)
 
-intro_comm_diet$imat
-#>          Pred    Prey1   Prey2 Microbe1 Detritus
-#> Pred        0 2.041667   1.000 0.000000        0
-#> Prey1       0 0.000000 209.886 0.000000        1
-#> Prey2       0 0.000000   0.000 5.376607        1
-#> Microbe1    0 0.000000   0.000 0.000000        1
-#> Detritus    0 0.000000   0.000 0.000000        0
+#intro_comm_diet$imat
 ```
 
 The other option is to correct respiration by increasing the overflow
@@ -124,29 +118,11 @@ function automatically prints the element that is most limiting for each
 species.
 
 ``` r
-# Correct the diet
-intro_comm_resp = correct_respiration(intro_comm)
-#>         ID Limiting_nutrient
-#> 1     Pred        Phosphorus
-#> 2    Prey1          Nitrogen
-#> 3    Prey2          Nitrogen
-#> 4 Microbe1            Carbon
-#> 5 Detritus            Carbon
+# Correct the diet NOT WORKING YET FOR THIS VERSION
+#intro_comm_resp = correct_respiration(intro_comm)
 
 # Look at the new values for overflow respiration:
-intro_comm_resp$prop$Carbon
-#>          ID    a    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant
-#> 1      Pred 0.61 0.20 0.5      0 1.0   0.1                 0          0       0
-#> 5     Prey1 0.65 0.10 0.5      0 3.0   8.0                 0          0       0
-#> 9     Prey2 0.45 0.05 0.5      0 0.5   5.0                 0          0       0
-#> 13 Microbe1 0.80 0.05 0.5      0 0.2  20.0                 0          0       0
-#> 17 Detritus 1.00 0.00 0.5      0 0.0 100.0                 1          1       0
-#>    p       Ehat
-#> 1  1 0.05097656
-#> 5  1 7.07486328
-#> 9  1 1.17282366
-#> 13 1 0.00000000
-#> 17 1 0.00000000
+#intro_comm_resp$prop$Carbon
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -157,29 +133,29 @@ customize the output to include whichever food web nodes and elements
 that are of interest.
 
 ``` r
-# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
-whomineralizes(intro_comm_resp)
+# Calculate the mineralization rates for all elements using the community with uncorrected rates, because other not working yet:
+whomineralizes(intro_comm)
 #>          ID    Element        Direct      Indirect
-#> 1      Pred     Carbon  3.888811e-04  0.000000e+00
-#> 2     Prey1     Carbon  8.893799e-01 -1.376207e-17
-#> 3     Prey2     Carbon  9.473654e-02  0.000000e+00
-#> 4  Microbe1     Carbon  1.549472e-02  0.000000e+00
-#> 5  Detritus     Carbon  0.000000e+00  0.000000e+00
-#> 6      Pred   Nitrogen -4.083241e-03  2.070124e-02
-#> 7     Prey1   Nitrogen  0.000000e+00  5.799253e-01
-#> 8     Prey2   Nitrogen  0.000000e+00  1.806213e-01
-#> 9  Microbe1   Nitrogen  1.004083e+00 -4.005648e-01
-#> 10 Detritus   Nitrogen  0.000000e+00  2.046118e+01
-#> 11     Pred Phosphorus  5.833179e-20  1.160009e-03
-#> 12    Prey1 Phosphorus  7.079718e-01  7.188048e-02
-#> 13    Prey2 Phosphorus  2.762660e-01 -6.176048e-05
-#> 14 Microbe1 Phosphorus  1.576218e-02 -1.146850e-16
-#> 15 Detritus Phosphorus  0.000000e+00 -1.448479e+00
-#> 16     Pred    Calcium  9.053197e-04  1.146800e-03
-#> 17    Prey1    Calcium  7.184487e-01  6.923348e-02
-#> 18    Prey2    Calcium  2.654982e-01 -1.993322e-04
-#> 19 Microbe1    Calcium  1.514783e-02 -1.239919e-16
-#> 20 Detritus    Calcium  0.000000e+00 -1.392023e+00
+#> 1      Pred     Carbon  0.0096618357  0.000000e+00
+#> 2     Prey1     Carbon  0.3864734300 -1.072679e-16
+#> 3     Prey2     Carbon  0.1207729469 -1.072679e-16
+#> 4  Microbe1     Carbon  0.4830917874 -1.072679e-16
+#> 5  Detritus     Carbon  0.0000000000  0.000000e+00
+#> 6      Pred   Nitrogen -0.0011003346  6.423725e-03
+#> 7     Prey1   Nitrogen  0.7310741155  5.479774e-02
+#> 8     Prey2   Nitrogen  0.0768140419  1.835448e-02
+#> 9  Microbe1   Nitrogen  0.1932121772 -4.114486e-02
+#> 10 Detritus   Nitrogen  0.0000000000  2.124507e+00
+#> 11     Pred Phosphorus -0.0004175263  1.356253e-02
+#> 12    Prey1 Phosphorus  0.0640487610  2.571424e-01
+#> 13    Prey2 Phosphorus  0.7442526615 -7.220880e-04
+#> 14 Microbe1 Phosphorus  0.1921161038  3.494572e-16
+#> 15 Detritus Phosphorus  0.0000000000 -5.262101e+00
+#> 16     Pred    Calcium  0.0093738683  1.268572e-02
+#> 17    Prey1    Calcium  0.1392353179  2.355166e-01
+#> 18    Prey2    Calcium  0.6767097565 -2.204981e-03
+#> 19 Microbe1    Calcium  0.1746810573  3.574609e-16
+#> 20 Detritus    Calcium  0.0000000000 -4.784551e+00
 ```
 
 ### Using your own food web
@@ -193,14 +169,14 @@ predator-prey relationships.
 ``` r
 # Feeding list example for the introductory community:
 feedinglist
-#>   Predator     Prey Preference
-#> 1     Pred    Prey1        1.0
-#> 2     Pred    Prey2        1.2
-#> 3    Prey1    Prey2        1.0
-#> 4    Prey2 Microbe1        1.0
-#> 5    Prey2 Detritus        1.0
-#> 6    Prey1 Detritus        1.0
-#> 7 Microbe1 Detritus        1.0
+#>   Predator     Prey Preference aCarbon aNitrogen aPhosphorus aCalcium
+#> 1     Pred    Prey1        1.0    0.61       0.7         0.8      0.8
+#> 2     Pred    Prey2        1.2    0.61       0.7         0.8      0.8
+#> 3    Prey1    Prey2        1.0    0.65       0.7         0.8      0.8
+#> 4    Prey2 Microbe1        1.0    0.45       0.7         0.8      0.8
+#> 5    Prey2 Detritus        1.0    0.45       0.7         0.8      0.8
+#> 6    Prey1 Detritus        1.0    0.65       0.7         0.8      0.8
+#> 7 Microbe1 Detritus        1.0    0.80       0.7         0.8      0.8
 ```
 
 The second is a properties dataframe listing the necessary parameters.
@@ -209,12 +185,12 @@ The second is a properties dataframe listing the necessary parameters.
 # Feeding list example for the introductory community:
 head(properties_example1)
 #>      ID Element Parameter Value
-#> 1  Pred  Carbon         a  0.61
-#> 2  Pred  Carbon         E  0.20
-#> 3  Pred  Carbon         Q  0.50
-#> 4  Pred  Carbon    canIMM  0.00
-#> 5 Prey1  Carbon         a  0.65
-#> 6 Prey1  Carbon         E  0.10
+#> 1  Pred  Carbon         E   0.2
+#> 2  Pred  Carbon         Q   0.5
+#> 3  Pred  Carbon    canIMM   0.0
+#> 4 Prey1  Carbon         E   0.1
+#> 5 Prey1  Carbon         Q   0.5
+#> 6 Prey1  Carbon    canIMM   0.0
 # Only printing the head of this file as an example.
 ```
 
@@ -230,63 +206,77 @@ str(yourfoodweb)
 #>   ..- attr(*, "dimnames")=List of 2
 #>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 #>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>  $ prop:List of 4
-#>   ..$ Carbon    :'data.frame':   5 obs. of  12 variables:
-#>   .. ..$ ID               : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ a                : num [1:5] 0.61 0.65 0.45 0.8 1
-#>   .. ..$ E                : num [1:5] 0.2 0.1 0.05 0.05 0
-#>   .. ..$ Q                : num [1:5] 0.5 0.5 0.5 0.5 0.5
-#>   .. ..$ canIMM           : num [1:5] 0 0 0 0 0
-#>   .. ..$ d                : num [1:5] 1 3 0.5 0.2 0
-#>   .. ..$ B                : num [1:5] 0.1 8 5 20 100
-#>   .. ..$ DetritusRecycling: num [1:5] 0 0 0 0 1
-#>   .. ..$ isDetritus       : num [1:5] 0 0 0 0 1
-#>   .. ..$ isPlant          : num [1:5] 0 0 0 0 0
-#>   .. ..$ p                : num [1:5] 1 1 1 1 1
-#>   .. ..$ Ehat             : num [1:5] 0 0 0 0 0
-#>   .. ..- attr(*, "reshapeWide")=List of 5
-#>   .. .. ..$ v.names: NULL
-#>   .. .. ..$ timevar: chr "Parameter"
-#>   .. .. ..$ idvar  : chr "ID"
-#>   .. .. ..$ times  : chr [1:11] "a" "E" "Q" "canIMM" ...
-#>   .. .. ..$ varying: chr [1, 1:11] "Value.a" "Value.E" "Value.Q" "Value.canIMM" ...
-#>   ..$ Nitrogen  :'data.frame':   5 obs. of  6 variables:
-#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ a     : num [1:5] 0.7 0.7 0.7 0.7 1
-#>   .. ..$ Q     : num [1:5] 0.111 0.104 0.1 0.1 0.025
-#>   .. ..$ canIMM: num [1:5] 0 0 0 1 0
-#>   .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
-#>   .. ..- attr(*, "reshapeWide")=List of 5
-#>   .. .. ..$ v.names: NULL
-#>   .. .. ..$ timevar: chr "Parameter"
-#>   .. .. ..$ idvar  : chr "ID"
-#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
-#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
-#>   ..$ Phosphorus:'data.frame':   5 obs. of  6 variables:
-#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ a     : num [1:5] 0.8 0.8 0.8 0.8 1
-#>   .. ..$ Q     : num [1:5] 0.015 0.01 0.008 0.008 0.008
-#>   .. ..$ canIMM: num [1:5] 0 0 0 1 0
-#>   .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
-#>   .. ..- attr(*, "reshapeWide")=List of 5
-#>   .. .. ..$ v.names: NULL
-#>   .. .. ..$ timevar: chr "Parameter"
-#>   .. .. ..$ idvar  : chr "ID"
-#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
-#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
-#>   ..$ Calcium   :'data.frame':   5 obs. of  6 variables:
-#>   .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ a     : num [1:5] 0.8 0.8 0.8 0.8 1
-#>   .. ..$ Q     : num [1:5] 0.01 0.011 0.009 0.009 0.009
-#>   .. ..$ canIMM: num [1:5] 0 0 0 0 0
-#>   .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. ..$ Emin  : num [1:5] 0 0 0 0 0
-#>   .. ..- attr(*, "reshapeWide")=List of 5
-#>   .. .. ..$ v.names: NULL
-#>   .. .. ..$ timevar: chr "Parameter"
-#>   .. .. ..$ idvar  : chr "ID"
-#>   .. .. ..$ times  : chr [1:5] "a" "Q" "canIMM" "p" ...
-#>   .. .. ..$ varying: chr [1, 1:5] "Value.a" "Value.Q" "Value.canIMM" "Value.p" ...
+#>  $ prop:List of 2
+#>   ..$ general     :List of 4
+#>   .. ..$ Carbon    :'data.frame':    5 obs. of  11 variables:
+#>   .. .. ..$ ID               : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ E                : num [1:5] 0.2 0.1 0.05 0.05 0
+#>   .. .. ..$ Q                : num [1:5] 0.5 0.5 0.5 0.5 0.5
+#>   .. .. ..$ canIMM           : num [1:5] 0 0 0 0 0
+#>   .. .. ..$ d                : num [1:5] 1 3 0.5 0.2 0
+#>   .. .. ..$ B                : num [1:5] 0.1 8 5 20 100
+#>   .. .. ..$ DetritusRecycling: num [1:5] 0 0 0 0 1
+#>   .. .. ..$ isDetritus       : num [1:5] 0 0 0 0 1
+#>   .. .. ..$ isPlant          : num [1:5] 0 0 0 0 0
+#>   .. .. ..$ p                : num [1:5] 1 1 1 1 1
+#>   .. .. ..$ Ehat             : num [1:5] 0 0 0 0 0
+#>   .. .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. .. ..$ v.names: NULL
+#>   .. .. .. ..$ timevar: chr "Parameter"
+#>   .. .. .. ..$ idvar  : chr "ID"
+#>   .. .. .. ..$ times  : chr [1:10] "E" "Q" "canIMM" "d" ...
+#>   .. .. .. ..$ varying: chr [1, 1:10] "Value.E" "Value.Q" "Value.canIMM" "Value.d" ...
+#>   .. ..$ Nitrogen  :'data.frame':    5 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:5] 0.111 0.104 0.1 0.1 0.025
+#>   .. .. ..$ canIMM: num [1:5] 0 0 0 1 0
+#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. .. ..$ v.names: NULL
+#>   .. .. .. ..$ timevar: chr "Parameter"
+#>   .. .. .. ..$ idvar  : chr "ID"
+#>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
+#>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
+#>   .. ..$ Phosphorus:'data.frame':    5 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:5] 0.015 0.01 0.008 0.008 0.008
+#>   .. .. ..$ canIMM: num [1:5] 0 0 0 1 0
+#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. .. ..$ v.names: NULL
+#>   .. .. .. ..$ timevar: chr "Parameter"
+#>   .. .. .. ..$ idvar  : chr "ID"
+#>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
+#>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
+#>   .. ..$ Calcium   :'data.frame':    5 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:5] 0.01 0.011 0.009 0.009 0.009
+#>   .. .. ..$ canIMM: num [1:5] 0 0 0 0 0
+#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. .. ..- attr(*, "reshapeWide")=List of 5
+#>   .. .. .. ..$ v.names: NULL
+#>   .. .. .. ..$ timevar: chr "Parameter"
+#>   .. .. .. ..$ idvar  : chr "ID"
+#>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
+#>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
+#>   ..$ assimilation:List of 4
+#>   .. ..$ Carbon    : num [1:5, 1:5] 1 1 1 1 1 0.61 1 1 1 1 ...
+#>   .. .. ..- attr(*, "dimnames")=List of 2
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Nitrogen  : num [1:5, 1:5] 1 1 1 1 1 0.7 1 1 1 1 ...
+#>   .. .. ..- attr(*, "dimnames")=List of 2
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Phosphorus: num [1:5, 1:5] 1 1 1 1 1 0.8 1 1 1 1 ...
+#>   .. .. ..- attr(*, "dimnames")=List of 2
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Calcium   : num [1:5, 1:5] 1 1 1 1 1 0.8 1 1 1 1 ...
+#>   .. .. ..- attr(*, "dimnames")=List of 2
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 ```

@@ -26,6 +26,9 @@ comana <- function(usin){
   # Calculate the vector weighted assimilation efficiencies:
   assimpref = rowSums(assim$Carbon*preference_matrix)
 
+  # Replace any zeros with 1, because they mean no assimilation but are necessary for a solution:
+  assimpref[assimpref == 0] = 1
+
   # Create a vector for the consumption rates
   diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
@@ -60,7 +63,7 @@ comana <- function(usin){
     detritusPOS = which(prop$Carbon$isDetritus >0)
 
     for(i in detritusPOS){
-      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$DetritusRecycling[i]*(sum((1-prop$Carbon$a)*consumption) + sum(prop$Carbon$d*prop$B))
+      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$DetritusRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + sum(prop$Carbon$d*prop$B))
     }
   }
 
@@ -78,25 +81,30 @@ comana <- function(usin){
   for(i in 2:length(element_list)) {
     current_element_properties = prop[[which(names(prop) == element_list[i])]]
 
+    current_element_assimilation = assim[[which(names(prop) == element_list[i])]]
+
     Qhat = prop$Carbon$Q/current_element_properties$Q
 
     AIJ[[i]] = matrix(Qhat, nrow = Nnodes, ncol = Nnodes)* # Predator C:X ratio
-                  matrix(current_element_properties$a*current_element_properties$p, nrow = Nnodes, ncol = Nnodes)/ # Predator X assimilation and production rates
+      current_element_assimilation*
+                  matrix(current_element_properties$p, nrow = Nnodes, ncol = Nnodes)/ # Predator X assimilation and production rates
                   matrix(Qhat, nrow = Nnodes, ncol = Nnodes, byrow = T) - # Prey C:X ratio
-                  matrix(prop$Carbon$a*prop$Carbon$p, nrow = Nnodes, ncol = Nnodes) # Predator C assimilation and production rates
+                  assim$Carbon*matrix(prop$Carbon$p, nrow = Nnodes, ncol = Nnodes) # Predator C assimilation and production rates
   }
 
   # Calculate carbon mineralization using the production efficiency
-  mineralization[[1]] = prop$Carbon$a*(1-prop$Carbon$p)*consumption + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B
+  mineralization[[1]] = (1-prop$Carbon$p)*rowSums(assim$Carbon*fmat$Carbon) + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B
 
   # Calculate the mineralization rates of the various elements using the comparison to carbon:
 
   for(i in 2:length(element_list)) {
     current_element_properties = prop[[which(names(prop) == element_list[i])]]
 
+    current_element_assimilation = assim[[which(names(prop) == element_list[i])]]
+
     Qhat = prop$Carbon$Q/current_element_properties$Q
 
-    mineralization[[i]] = (1-current_element_properties$p)*current_element_properties$a*rowSums(fmat[[i]]) + (prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B + # Carbon mineralization rate based on a fixed proportion of biomass
+    mineralization[[i]] = (1-current_element_properties$p)*rowSums(current_element_assimilation*fmat[[i]]) + (prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B + # Carbon mineralization rate based on a fixed proportion of biomass
                              rowSums((AIJ[[i]])* # Net element gain from feeding
                                        fmat$Carbon))* # consumption rates
       Qhat* # multiply by C:X ratio to get back to units of X

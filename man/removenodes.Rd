@@ -18,5 +18,5 @@ The community without the removed nodes.
 Remove nodes from community.
 }
 \examples{
-removenodes(intro_comm, c("Predator"))
+removenodes(intro_comm, c("Pred"))
 }

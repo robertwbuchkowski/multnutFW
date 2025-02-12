@@ -21,7 +21,7 @@
 #' @export
 whomineralizes <- function(usin, elements = "All", selected = NULL){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
-  Nnames = usin$prop$Carbon$ID # Get the names
+  Nnames = usin$prop$general$Carbon$ID # Get the names
 
   # Select only the chosen nodes:
   if(!is.null(selected)){
@@ -30,7 +30,7 @@ whomineralizes <- function(usin, elements = "All", selected = NULL){
   }
 
   if(elements == "All" | elements == "all"){
-    elements = names(usin$prop)
+    elements = names(usin$prop$general)
   }
 
   output = vector(mode = "list", length = length(elements))
@@ -39,13 +39,13 @@ whomineralizes <- function(usin, elements = "All", selected = NULL){
 
     res1 <- comana(usin) # Calculate the C and N fluxes
 
-    if(any(unname(usin$prop$Carbon$ID) != names(res1$usin$prop$Carbon$ID))){
+    if(any(unname(usin$prop$general$Carbon$ID) != names(res1$usin$prop$general$Carbon$ID))){
       stop("Sorting of trophic levels not matching up")
     }
 
     # Calculate the direct and indirect mineralization rates
     output[[el]] = data.frame(
-      ID = unname(usin$prop$Carbon$ID), # Name of the node
+      ID = unname(usin$prop$general$Carbon$ID), # Name of the node
       Element = element,
       Direct = res1$mineralization[[element]]/sum(res1$mineralization[[element]]), # Direct C mineralization--the amount that the species respires over the total
       Indirect = NA) # Save space for indirect

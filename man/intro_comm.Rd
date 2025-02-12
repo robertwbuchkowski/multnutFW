@@ -8,7 +8,7 @@
 A list containing the feeding matrix and properties
 \describe{
   \item{imat}{The feeding matrix.}
-  \item{prop}{A list of property databases for each element.}
+  \item{prop}{A list of property databases for each element. There are two parts to this list. The general part includes parameters at the node level and the assimilation part refers to the feeding-specific assimilation efficiency.}
 }
 }
 \source{

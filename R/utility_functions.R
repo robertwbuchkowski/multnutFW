@@ -83,7 +83,7 @@ TLcheddar <- function(W){
 TLsort <- function(usin){
 
   # Identify the cannibals and mutual predators if not already done
-  if(!("MutualPred" %in% colnames(usin$prop$Carbon))){
+  if(!("MutualPred" %in% colnames(usin$prop$general$Carbon))){
     usin = can_mutfeed(usin)
   }
 
@@ -120,7 +120,7 @@ TLsort <- function(usin){
     # Build a list of predators
     predatorlist = imat[,rid] > 0
     # Turn any predators that are on the mutual feeding list to false...these can't be sorted hierarchically
-    predatorlist[names(predatorlist) %in%  stringr::str_split(prop$Carbon$MutualPred[rid], "/")[[1]]] = FALSE
+    predatorlist[names(predatorlist) %in%  stringr::str_split(prop$general$Carbon$MutualPred[rid], "/")[[1]]] = FALSE
     if(sum(predatorlist) == 0){
       rid = rid + 1
     }else{
@@ -147,10 +147,17 @@ TLsort <- function(usin){
   }
 
   # Order of the colnames:
-  for(ii in 1:length(prop)){
-    prop[[ii]] = prop[[ii]][match(colnames(imat), prop[[ii]]$ID),]
+  for(ii in 1:length(prop$general)){
+    prop$general[[ii]] = prop$general[[ii]][match(colnames(imat), prop$general[[ii]]$ID),]
 
-    stopifnot(all(colnames(imat) == prop[[ii]]$ID))
+    stopifnot(all(colnames(imat) == prop$general[[ii]]$ID))
+  }
+
+  # Order columns and rows in assimilation matrices:
+  for(ii in 1:length(prop$assimilation)){
+    prop$assimilation[[ii]] = prop$assimilation[[ii]][colnames(imat),colnames(imat)]
+
+    stopifnot(all(colnames(imat) == colnames(prop$assimilation[[ii]])))
   }
 
   return(list(imat = imat, prop = prop))
@@ -179,7 +186,7 @@ can_mutfeed <- function(usin){
 
   MutualPred[MutualPred == ""] = NA
 
-  prop$Carbon[,"MutualPred"] = MutualPred
+  prop$general$Carbon[,"MutualPred"] = MutualPred
 
   return(list(imat = imat, prop = prop))
 }
@@ -198,8 +205,8 @@ Cijfcn <- function(usin){ # Function only requires the community inputs
 
   Nnodes = dim(imat)[1] # Number of nodes
 
-  Bpred = matrix(prop$Carbon$B, ncol = Nnodes, nrow = Nnodes) # A matrix of predators
-  Bprey = matrix(prop$Carbon$B, ncol = Nnodes, nrow = Nnodes, byrow = T) # A matrix of prey
+  Bpred = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes) # A matrix of predators
+  Bprey = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes, byrow = T) # A matrix of prey
   fmat = comana(usin)$fmat$Carbon # Get the consumption matrix (units = gC/ time)
   cij = fmat/(Bpred*Bprey) # Get the consumption rate matrix (units 1/ (gC * time))
   return(cij) # Return the consumption rates (gC^-1 time^-1)
@@ -221,18 +228,21 @@ RESCALE <- function(invec, a = 0, b = 1){
 #' @param toremove A vector of nodes to remove using their names.
 #' @return The community without the removed nodes.
 #' @examples
-#' removenodes(intro_comm, c("Predator"))
+#' removenodes(intro_comm, c("Pred"))
 #' @export
 removenodes <- function(COMM, toremove){
-  whichtorm = !(COMM$prop$Carbon$ID %in% toremove)
+  whichtorm = !(COMM$prop$general$Carbon$ID %in% toremove)
 
   COMM$imat = COMM$imat[whichtorm,whichtorm]
 
-  for(ii in 1:length(COMM$prop)){
-    COMM$prop[[ii]] = subset(COMM$prop[[ii]], !(COMM$prop[[ii]]$ID %in% toremove))
+  for(ii in 1:length(COMM$prop$general)){
+    COMM$prop$general[[ii]] = subset(COMM$prop$general[[ii]], !(COMM$prop$general[[ii]]$ID %in% toremove))
 
-    stopifnot(all(COMM$prop[[ii]]$ID == rownames(COMM$imat)))
-    stopifnot(all(COMM$prop[[ii]]$ID == colnames(COMM$imat)))
+    stopifnot(all(COMM$prop$general[[ii]]$ID == rownames(COMM$imat)))
+    stopifnot(all(COMM$prop$general[[ii]]$ID == colnames(COMM$imat)))
+
+    COMM$prop$assimilation[[ii]] = COMM$prop$assimilation[[ii]][whichtorm,whichtorm]
+
   }
   return(COMM)
 }
@@ -244,20 +254,24 @@ removenodes <- function(COMM, toremove){
 #' @param newname The node's new name
 #' @return The community with the new name.
 #' @examples
-#' renamenode(intro_comm, oldname = "Predator", newname = "NewPredator")
+#' renamenode(intro_comm, oldname = "Pred", newname = "NewPredator")
 #' @export
 renamenode <- function(COMM, oldname,newname){
-  whichtorm = COMM$prop$Carbon$ID %in% oldname
+  whichtorm = COMM$prop$general$Carbon$ID %in% oldname
 
   colnames(COMM$imat)[whichtorm] = rownames(COMM$imat)[whichtorm] = newname
 
-  COMM$prop$Carbon$ID[whichtorm] = newname
+  COMM$prop$general$Carbon$ID[whichtorm] = newname
 
-  for(ii in 1:length(COMM$prop)){
-    COMM$prop[[ii]]$ID[whichtorm] = newname
+  for(ii in 1:length(COMM$prop$general)){
+    COMM$prop$general[[ii]]$ID[whichtorm] = newname
 
-    stopifnot(all(COMM$prop[[ii]]$ID == rownames(COMM$imat)))
-    stopifnot(all(COMM$prop[[ii]]$ID == colnames(COMM$imat)))
+    stopifnot(all(COMM$prop$general[[ii]]$ID == rownames(COMM$imat)))
+    stopifnot(all(COMM$prop$general[[ii]]$ID == colnames(COMM$imat)))
+
+    colnames(COMM$prop$assimilation[[ii]]) = colnames(COMM$imat)
+    rownames(COMM$prop$assimilation[[ii]]) = rownames(COMM$imat)
+
   }
 
   return(COMM)
@@ -276,19 +290,19 @@ checkeqm <- function(usin, eqmtolerance = NA){
   cares = comana(usin)
 
   netchange = # Consumption rate
-    usin$prop$Carbon$a*usin$prop$Carbon$p*rowSums(cares$fmat$Carbon) -
+    usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*cares$fmat$Carbon) -
 
     # Natural death
-    usin$prop$Carbon$d*usin$prop$Carbon$B -
+    usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -
 
     # Respiration
-    usin$prop$Carbon$E*usin$prop$Carbon$B -
+    usin$prop$general$Carbon$E*usin$prop$general$Carbon$B -
 
     # Predation
     colSums(cares$fmat$Carbon) +
 
     # Detritus recycling
-    usin$prop$Carbon$DetritusRecycling*sum(usin$prop$Carbon$d*usin$prop$Carbon$B + (1 - usin$prop$Carbon$a)*usin$prop$Carbon$p*rowSums(cares$fmat$Carbon))
+    usin$prop$general$Carbon$DetritusRecycling*sum(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B + usin$prop$general$Carbon$p*rowSums((1-usin$prop$assimilation$Carbon)*cares$fmat$Carbon))
 
   # Get rid of basal trophic levels where inputs are OK
   netchange = netchange[TLcheddar(usin$imat) != 1]

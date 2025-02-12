@@ -12,15 +12,15 @@ test_that("build_foodweb ouput imat dimensions", {
 test_that("build_foodweb ouput prop dimensions", {
   testthat::expect_equal(
     colnames(build_foodweb(feedinglist, properties_example1)$imat),
-    build_foodweb(feedinglist, properties_example1)$prop[[1]]$ID
+    build_foodweb(feedinglist, properties_example1)$prop$general[[1]]$ID
   )
 })
 
-test_that("build_foodweb ouput prop IDs", {
-  for(i in 2:length(build_foodweb(feedinglist, properties_example1)$prop)){
+test_that("build_foodweb ouputt prop IDs", {
+  for(i in 2:length(build_foodweb(feedinglist, properties_example1)$prop$general)){
     testthat::expect_equal(
-      build_foodweb(feedinglist, properties_example1)$prop[[1]]$ID,
-      build_foodweb(feedinglist, properties_example1)$prop[[i]]$ID
+      build_foodweb(feedinglist, properties_example1)$prop$general[[1]]$ID,
+      build_foodweb(feedinglist, properties_example1)$prop$general[[i]]$ID
     )
   }
 })

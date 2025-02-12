@@ -26,8 +26,8 @@ The goal of multnutFW is to analyze food web models that contain a user-defined 
 You can install the development version of multnutFW from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("robertwbuchkowski/multnutFW")
+# install.packages("devtools")
+devtools::install_github("robertwbuchkowski/multnutFW@development")
 ```
 
 ## Example
@@ -74,10 +74,10 @@ The package offers two options: correct diet or correct respiration.
 To correct the diet, organisms shift their diet towards less abundant, nutrient rich food. Notice the changes in feeding preferences.
 
 ```{r example5}
-# Correct the diet
-intro_comm_diet = correct_diet(intro_comm)
+# Correct the diet NOT WORKING YET FOR THIS VERSION
+#intro_comm_diet = correct_diet(intro_comm)
 
-intro_comm_diet$imat
+#intro_comm_diet$imat
 ```
 
 The other option is to correct respiration by increasing the overflow respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to remove the excess carbon. This change has to occur simultaneously with changes in feeding rate, because it often means that more volume needs to be eaten to overcome nutrient limitation.
@@ -85,11 +85,11 @@ The other option is to correct respiration by increasing the overflow respiratio
 Whenever the respiration term is reduced, this means that the organism is suffering elemental limitaiton from something other than carbon. The function automatically prints the element that is most limiting for each species.
 
 ```{r example6}
-# Correct the diet
-intro_comm_resp = correct_respiration(intro_comm)
+# Correct the diet NOT WORKING YET FOR THIS VERSION
+#intro_comm_resp = correct_respiration(intro_comm)
 
 # Look at the new values for overflow respiration:
-intro_comm_resp$prop$Carbon
+#intro_comm_resp$prop$Carbon
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -97,8 +97,8 @@ intro_comm_resp$prop$Carbon
 You can calculate the direct and indirect effects of each organism on mineralization using the built in function. This function allows you to customize the output to include whichever food web nodes and elements that are of interest.
 
 ```{r}
-# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
-whomineralizes(intro_comm_resp)
+# Calculate the mineralization rates for all elements using the community with uncorrected rates, because other not working yet:
+whomineralizes(intro_comm)
 ```
 
 ### Using your own food web

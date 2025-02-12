@@ -6,6 +6,8 @@
 #' @export
 correct_respiration = function(usin, output_type = TRUE){
 
+  stop("BROKEN FOR NOW")
+
   # Produce a vector to print/output the nutrient limitation of each organism:
   nutlim <- rep(NA, dim(usin$imat)[1])
 
