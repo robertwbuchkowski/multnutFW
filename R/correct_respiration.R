@@ -6,14 +6,12 @@
 #' @export
 correct_respiration = function(usin, output_type = TRUE){
 
-  stop("BROKEN FOR NOW")
-
   # Produce a vector to print/output the nutrient limitation of each organism:
   nutlim <- rep(NA, dim(usin$imat)[1])
 
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
   species = unname(which(apply(do.call("rbind", comana(usin)$mineralization)* # This is the mineralizaiton
-                                 do.call("rbind",lapply(usin$prop, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
+                                 do.call("rbind",lapply(usin$prop$general, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
                                2, function(x) any(x < 0)) &
                            apply(usin$imat > 0, 1, sum) > 1 # Species must have more than one food item
   ))
@@ -22,7 +20,8 @@ correct_respiration = function(usin, output_type = TRUE){
 
   # Separate the imat and prop:
   imat = usin$imat # row values of imat sets predator feeding preferences!
-  prop = usin$prop # properties of each trophic species
+  prop = usin$prop$general # properties of each trophic species
+  assim = usin$prop$assimilation # the assimilation matrices
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
   # Create a vector for the consumption rates
@@ -36,7 +35,17 @@ correct_respiration = function(usin, output_type = TRUE){
 
   temp_mat2[!is.finite(temp_mat2)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 
-  diag(temp_mat) = prop$Carbon$a*prop$Carbon$p + diag(temp_mat) # Add in a*p term
+  # Save the preference matrix:
+  preference_matrix = -1*t(temp_mat)
+
+  # Calculate the vector weighted assimilation efficiencies:
+  assimpref = rowSums(assim$Carbon*preference_matrix)
+
+  # Replace any zeros with 1, because they mean no assimilation but are necessary for a solution:
+  assimpref[assimpref == 0] = 1
+
+  # Create a vector for the consumption rates
+  diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
   # Correct columns to correct respiration:
   temp_mat3 = matrix(0, nrow = Nnodes, ncol = length(species))
@@ -49,7 +58,8 @@ correct_respiration = function(usin, output_type = TRUE){
   for(sp in species){
     # Separate the imat and prop:
     imat = usin$imat # row values of imat sets predator feeding preferences!
-    prop = usin$prop # properties of each trophic species
+    prop = usin$prop$general # properties of each trophic species
+    assim = usin$prop$assimilation # the assimilation rates for each species
     # mineralization = comana(usin)$mineralization
     Fij = comana(usin)$fmat$Carbon
     Nnodes = dim(imat)[1] # Number of nodes in the food web
@@ -85,7 +95,7 @@ correct_respiration = function(usin, output_type = TRUE){
   Ehat = rep(0, Nnodes)
   Ehat[species] = solution[c((Nnodes+1) : (Nnodes + length(species)))]
 
-  usin$prop$Carbon$Ehat = Ehat
+  usin$prop$general$Carbon$Ehat = Ehat
 
   if(output_type){
     print(data.frame(ID = colnames(usin$imat),

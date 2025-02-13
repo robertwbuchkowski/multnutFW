@@ -74,10 +74,10 @@ The package offers two options: correct diet or correct respiration.
 To correct the diet, organisms shift their diet towards less abundant, nutrient rich food. Notice the changes in feeding preferences.
 
 ```{r example5}
-# Correct the diet NOT WORKING YET FOR THIS VERSION
-#intro_comm_diet = correct_diet(intro_comm)
+# Correct the diet
+intro_comm_diet = correct_diet(intro_comm)
 
-#intro_comm_diet$imat
+intro_comm_diet$imat
 ```
 
 The other option is to correct respiration by increasing the overflow respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to remove the excess carbon. This change has to occur simultaneously with changes in feeding rate, because it often means that more volume needs to be eaten to overcome nutrient limitation.
@@ -85,11 +85,11 @@ The other option is to correct respiration by increasing the overflow respiratio
 Whenever the respiration term is reduced, this means that the organism is suffering elemental limitaiton from something other than carbon. The function automatically prints the element that is most limiting for each species.
 
 ```{r example6}
-# Correct the diet NOT WORKING YET FOR THIS VERSION
-#intro_comm_resp = correct_respiration(intro_comm)
+# Correct the respiration
+intro_comm_resp = correct_respiration(intro_comm)
 
 # Look at the new values for overflow respiration:
-#intro_comm_resp$prop$Carbon
+intro_comm_resp$prop$general$Carbon
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -97,15 +97,15 @@ Whenever the respiration term is reduced, this means that the organism is suffer
 You can calculate the direct and indirect effects of each organism on mineralization using the built in function. This function allows you to customize the output to include whichever food web nodes and elements that are of interest.
 
 ```{r}
-# Calculate the mineralization rates for all elements using the community with uncorrected rates, because other not working yet:
-whomineralizes(intro_comm)
+# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
+whomineralizes(intro_comm_resp)
 ```
 
 ### Using your own food web
 
 You can run the analyzes on your own food webs easily by using the `build_foodweb` function to get them into the right format.
 
-The function requires two inputs. First is a feeding list of predator-prey relationships.
+The function requires two inputs. First is a feeding list of predator-prey relationships. This data frame also contains the rates of assimilation efficiency for each trophic interaction coded with the letter 'a' before each element included in the model. Sometimes, users would like to use the same assimilation efficiency for each food source or for each node. You can do this by just repeating the assimilation efficiency for each feeding interaction. One easy way to implement this is to join a table of node ID and assimilation efficiency with the feeding list table by either Predator or Prey columns, respectively.
 
 ```{r example7}
 # Feeding list example for the introductory community:
@@ -127,3 +127,5 @@ yourfoodweb = build_foodweb(feeding = feedinglist, properties = properties_examp
 
 str(yourfoodweb)
 ```
+
+The function creates an interaction matrix and also breaks out the assimilation efficiency and properties by element into the appropriate matrices for the package. If you look at the structure of this community, you can see how to build it manually using lists.

@@ -3,9 +3,12 @@
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
 #' @return The modified community with new diet preferences.
+#' @examples
+#' # Basic example with introductory community
+#' correct_diet(intro_comm)
 #' @export
 correct_diet <- function(usin,dietlimits = c(NA)){
-  stop("BROKEN FOR NOW")
+
   # Setting up and verifying diet limits
   if(any(is.na(dietlimits))){
     dietlimits = usin$imat
@@ -16,7 +19,7 @@ correct_diet <- function(usin,dietlimits = c(NA)){
   }
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
   species = unname(which(apply(do.call("rbind", comana(usin)$mineralization)* # This is the mineralizaiton
-                                 do.call("rbind",lapply(usin$prop, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
+                                 do.call("rbind",lapply(usin$prop$general, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
                                2, function(x) any(x < 0)) &
                            apply(usin$imat > 0, 1, sum) > 1 # Species must have more than one food item
   ))
@@ -26,7 +29,7 @@ correct_diet <- function(usin,dietlimits = c(NA)){
 
     # Separate the imat and prop:
     imat = usin$imat # row values of imat sets predator feeding preferences!
-    prop = usin$prop # properties of each trophic species
+    prop = usin$prop$general # properties of each trophic species
     mineralization = comana(usin)$mineralization
     consumption = comana(usin)$consumption
     Nnodes = dim(imat)[1] # Number of nodes in the food web

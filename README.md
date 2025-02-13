@@ -100,10 +100,16 @@ To correct the diet, organisms shift their diet towards less abundant,
 nutrient rich food. Notice the changes in feeding preferences.
 
 ``` r
-# Correct the diet NOT WORKING YET FOR THIS VERSION
-#intro_comm_diet = correct_diet(intro_comm)
+# Correct the diet
+intro_comm_diet = correct_diet(intro_comm)
 
-#intro_comm_diet$imat
+intro_comm_diet$imat
+#>          Pred    Prey1   Prey2 Microbe1 Detritus
+#> Pred        0 2.041667   1.000 0.000000        0
+#> Prey1       0 0.000000 209.886 0.000000        1
+#> Prey2       0 0.000000   0.000 5.376607        1
+#> Microbe1    0 0.000000   0.000 0.000000        1
+#> Detritus    0 0.000000   0.000 0.000000        0
 ```
 
 The other option is to correct respiration by increasing the overflow
@@ -118,11 +124,29 @@ function automatically prints the element that is most limiting for each
 species.
 
 ``` r
-# Correct the diet NOT WORKING YET FOR THIS VERSION
-#intro_comm_resp = correct_respiration(intro_comm)
+# Correct the respiration
+intro_comm_resp = correct_respiration(intro_comm)
+#>         ID Limiting_nutrient
+#> 1     Pred        Phosphorus
+#> 2    Prey1          Nitrogen
+#> 3    Prey2          Nitrogen
+#> 4 Microbe1            Carbon
+#> 5 Detritus            Carbon
 
 # Look at the new values for overflow respiration:
-#intro_comm_resp$prop$Carbon
+intro_comm_resp$prop$general$Carbon
+#>          ID    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant p
+#> 1      Pred 0.20 0.5      0 1.0   0.1                 0          0       0 1
+#> 4     Prey1 0.10 0.5      0 3.0   8.0                 0          0       0 1
+#> 7     Prey2 0.05 0.5      0 0.5   5.0                 0          0       0 1
+#> 10 Microbe1 0.05 0.5      0 0.2  20.0                 0          0       0 1
+#> 13 Detritus 0.00 0.5      0 0.0 100.0                 1          1       0 1
+#>          Ehat
+#> 1  0.05097656
+#> 4  7.07486328
+#> 7  1.17282366
+#> 10 0.00000000
+#> 13 0.00000000
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -133,29 +157,29 @@ customize the output to include whichever food web nodes and elements
 that are of interest.
 
 ``` r
-# Calculate the mineralization rates for all elements using the community with uncorrected rates, because other not working yet:
-whomineralizes(intro_comm)
+# Calculate the mineralization rates for all elements using the community with corrected respiration rates:
+whomineralizes(intro_comm_resp)
 #>          ID    Element        Direct      Indirect
-#> 1      Pred     Carbon  0.0096618357  0.000000e+00
-#> 2     Prey1     Carbon  0.3864734300 -1.072679e-16
-#> 3     Prey2     Carbon  0.1207729469 -1.072679e-16
-#> 4  Microbe1     Carbon  0.4830917874 -1.072679e-16
+#> 1      Pred     Carbon  0.0003888811  0.000000e+00
+#> 2     Prey1     Carbon  0.8893798624 -1.376207e-17
+#> 3     Prey2     Carbon  0.0947365386  0.000000e+00
+#> 4  Microbe1     Carbon  0.0154947179  0.000000e+00
 #> 5  Detritus     Carbon  0.0000000000  0.000000e+00
-#> 6      Pred   Nitrogen -0.0011003346  6.423725e-03
-#> 7     Prey1   Nitrogen  0.7310741155  5.479774e-02
-#> 8     Prey2   Nitrogen  0.0768140419  1.835448e-02
-#> 9  Microbe1   Nitrogen  0.1932121772 -4.114486e-02
-#> 10 Detritus   Nitrogen  0.0000000000  2.124507e+00
-#> 11     Pred Phosphorus -0.0004175263  1.356253e-02
-#> 12    Prey1 Phosphorus  0.0640487610  2.571424e-01
-#> 13    Prey2 Phosphorus  0.7442526615 -7.220880e-04
-#> 14 Microbe1 Phosphorus  0.1921161038  3.494572e-16
-#> 15 Detritus Phosphorus  0.0000000000 -5.262101e+00
-#> 16     Pred    Calcium  0.0093738683  1.268572e-02
-#> 17    Prey1    Calcium  0.1392353179  2.355166e-01
-#> 18    Prey2    Calcium  0.6767097565 -2.204981e-03
-#> 19 Microbe1    Calcium  0.1746810573  3.574609e-16
-#> 20 Detritus    Calcium  0.0000000000 -4.784551e+00
+#> 6      Pred   Nitrogen -0.0040832407  2.070124e-02
+#> 7     Prey1   Nitrogen  0.0000000000  5.799253e-01
+#> 8     Prey2   Nitrogen  0.0000000000  1.806213e-01
+#> 9  Microbe1   Nitrogen  1.0040832407 -4.005648e-01
+#> 10 Detritus   Nitrogen  0.0000000000  2.046118e+01
+#> 11     Pred Phosphorus  0.0000000000  1.160009e-03
+#> 12    Prey1 Phosphorus  0.7079718439  7.188048e-02
+#> 13    Prey2 Phosphorus  0.2762659732 -6.176048e-05
+#> 14 Microbe1 Phosphorus  0.0157621829  0.000000e+00
+#> 15 Detritus Phosphorus  0.0000000000 -1.448479e+00
+#> 16     Pred    Calcium  0.0009053197  1.146800e-03
+#> 17    Prey1    Calcium  0.7184486766  6.923348e-02
+#> 18    Prey2    Calcium  0.2654981710 -1.993322e-04
+#> 19 Microbe1    Calcium  0.0151478327 -1.239919e-16
+#> 20 Detritus    Calcium  0.0000000000 -1.392023e+00
 ```
 
 ### Using your own food web
@@ -164,7 +188,14 @@ You can run the analyzes on your own food webs easily by using the
 `build_foodweb` function to get them into the right format.
 
 The function requires two inputs. First is a feeding list of
-predator-prey relationships.
+predator-prey relationships. This data frame also contains the rates of
+assimilation efficiency for each trophic interaction coded with the
+letter ‘a’ before each element included in the model. Sometimes, users
+would like to use the same assimilation efficiency for each food source
+or for each node. You can do this by just repeating the assimilation
+efficiency for each feeding interaction. One easy way to implement this
+is to join a table of node ID and assimilation efficiency with the
+feeding list table by either Predator or Prey columns, respectively.
 
 ``` r
 # Feeding list example for the introductory community:
@@ -280,3 +311,8 @@ str(yourfoodweb)
 #>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 #>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 ```
+
+The function creates an interaction matrix and also breaks out the
+assimilation efficiency and properties by element into the appropriate
+matrices for the package. If you look at the structure of this
+community, you can see how to build it manually using lists.
