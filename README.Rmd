@@ -82,7 +82,7 @@ intro_comm_diet$imat
 
 The other option is to correct respiration by increasing the overflow respiration $\hat{E}_{C,i}$ term from 0 to whatever value is needed to remove the excess carbon. This change has to occur simultaneously with changes in feeding rate, because it often means that more volume needs to be eaten to overcome nutrient limitation.
 
-Whenever the respiration term is reduced, this means that the organism is suffering elemental limitaiton from something other than carbon. The function automatically prints the element that is most limiting for each species.
+Whenever the respiration term is reduced, this means that the organism is suffering elemental limitation from something other than carbon. The function automatically prints the element that is most limiting for each species.
 
 ```{r example6}
 # Correct the respiration

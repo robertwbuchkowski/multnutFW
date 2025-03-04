@@ -17,3 +17,7 @@ The modified community with new diet preferences.
 \description{
 A function to correct the diet of trophic species.
 }
+\examples{
+# Basic example with introductory community
+correct_diet(intro_comm)
+}

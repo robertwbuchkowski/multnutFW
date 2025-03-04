@@ -119,7 +119,7 @@ changes in feeding rate, because it often means that more volume needs
 to be eaten to overcome nutrient limitation.
 
 Whenever the respiration term is reduced, this means that the organism
-is suffering elemental limitaiton from something other than carbon. The
+is suffering elemental limitation from something other than carbon. The
 function automatically prints the element that is most limiting for each
 species.
 
