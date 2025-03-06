@@ -129,3 +129,24 @@ str(yourfoodweb)
 ```
 
 The function creates an interaction matrix and also breaks out the assimilation efficiency and properties by element into the appropriate matrices for the package. If you look at the structure of this community, you can see how to build it manually using lists.
+
+### Modifying respiration parameters
+
+The model contains respiration parameters that either take respiration as a function of biomass $E$ or as a function of consumption rate $p$. The package contains functions to switch between these two parameters during the calculations in $comana$. At equilibrium, the difference does not matter, but it is important when simulating the food web.
+
+```{r example10}
+
+# Take the introdutory community and switch respiration by E to p.
+temp_comm = E_to_p(intro_comm)
+
+temp_comm$prop$general$Carbon
+
+# Switch back
+temp_comm = p_to_E(temp_comm)
+
+temp_comm$prop$general$Carbon
+
+# Clean up environment
+rm(temp_comm)
+```
+

@@ -316,3 +316,51 @@ The function creates an interaction matrix and also breaks out the
 assimilation efficiency and properties by element into the appropriate
 matrices for the package. If you look at the structure of this
 community, you can see how to build it manually using lists.
+
+### Modifying respiration parameters
+
+The model contains respiration parameters that either take respiration
+as a function of biomass $E$ or as a function of consumption rate $p$.
+The package contains functions to switch between these two parameters
+during the calculations in $comana$. At equilibrium, the difference does
+not matter, but it is important when simulating the food web.
+
+``` r
+
+# Take the introdutory community and switch respiration by E to p.
+temp_comm = E_to_p(intro_comm)
+
+temp_comm$prop$general$Carbon
+#>          ID E   Q canIMM   d     B DetritusRecycling isDetritus isPlant
+#> 1      Pred 0 0.5      0 1.0   0.1                 0          0       0
+#> 4     Prey1 0 0.5      0 3.0   8.0                 0          0       0
+#> 7     Prey2 0 0.5      0 0.5   5.0                 0          0       0
+#> 10 Microbe1 0 0.5      0 0.2  20.0                 0          0       0
+#> 13 Detritus 0 0.5      0 0.0 100.0                 1          1       0
+#>            p Ehat
+#> 1  0.8333333    0
+#> 4  0.9678875    0
+#> 7  0.9463450    0
+#> 10 0.8513166    0
+#> 13 1.0000000    0
+
+# Switch back
+temp_comm = p_to_E(temp_comm)
+
+temp_comm$prop$general$Carbon
+#>          ID    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant p
+#> 1      Pred 0.20 0.5      0 1.0   0.1                 0          0       0 1
+#> 4     Prey1 0.10 0.5      0 3.0   8.0                 0          0       0 1
+#> 7     Prey2 0.05 0.5      0 0.5   5.0                 0          0       0 1
+#> 10 Microbe1 0.05 0.5      0 0.2  20.0                 0          0       0 1
+#> 13 Detritus 0.00 0.5      0 0.0 100.0                 1          1       0 1
+#>    Ehat
+#> 1     0
+#> 4     0
+#> 7     0
+#> 10    0
+#> 13    0
+
+# Clean up environment
+rm(temp_comm)
+```
