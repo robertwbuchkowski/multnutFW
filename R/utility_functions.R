@@ -194,11 +194,12 @@ can_mutfeed <- function(usin){
 #' A utility function to calculate the consumption rate of each species on all prey assuming a type I functional response.
 #'
 #' @param usin The community on which feeding rate calculations are made.
+#' @param h The value of the handling time if you want to use a type II functional response. If NA, you are using a Type I functional response.
 #' @return A matrix of consumption rates with units set by the the biomass input units in biomass and time.
 #' @examples
 #' Cijfcn(intro_comm)
 #' @export
-Cijfcn <- function(usin){ # Function only requires the community inputs
+Cijfcn <- function(usin, h = NA){ # Function only requires the community inputs
 
   imat = usin$imat # Feeding matrix
   prop = usin$prop # Properties of the species
@@ -208,7 +209,11 @@ Cijfcn <- function(usin){ # Function only requires the community inputs
   Bpred = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes) # A matrix of predators
   Bprey = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes, byrow = T) # A matrix of prey
   fmat = comana(usin)$fmat$Carbon # Get the consumption matrix (units = gC/ time)
-  cij = fmat/(Bpred*Bprey) # Get the consumption rate matrix (units 1/ (gC * time))
+  if(all(is.na(h))){
+    cij = fmat/(Bpred*Bprey) # Get the consumption rate matrix (units 1/ (gC * time))
+  }else{
+    cij = fmat / (Bprey * (Bpred - fmat * h)) # Get the consumption rate
+  }
   return(cij) # Return the consumption rates (gC^-1 time^-1)
 }
 
@@ -297,6 +302,9 @@ checkeqm <- function(usin, eqmtolerance = NA){
 
     # Respiration
     usin$prop$general$Carbon$E*usin$prop$general$Carbon$B -
+
+    # Overflow Respiration
+    usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B -
 
     # Predation
     colSums(cares$fmat$Carbon) +

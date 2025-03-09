@@ -4,10 +4,12 @@
 \alias{Cijfcn}
 \title{A utility function to calculate the consumption rate of each species on all prey assuming a type I functional response.}
 \usage{
-Cijfcn(usin)
+Cijfcn(usin, h = NA)
 }
 \arguments{
 \item{usin}{The community on which feeding rate calculations are made.}
+
+\item{h}{The value of the handling time if you want to use a type II functional response. If NA, you are using a Type I functional response.}
 }
 \value{
 A matrix of consumption rates with units set by the the biomass input units in biomass and time.

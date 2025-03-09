@@ -324,6 +324,7 @@ as a function of biomass $E$ or as a function of consumption rate $p$.
 The package contains functions to switch between these two parameters
 during the calculations in $comana$. At equilibrium, the difference does
 not matter, but it is important when simulating the food web.
+Simulations will be explored next.
 
 ``` r
 
