@@ -115,6 +115,10 @@ getPARAMS <- function(usin,
     # Excretion:
     biomass_exrete
 
+  # NEXT STEPS HERE ARE TO ADD RECYCLING DETRITUS AND ALSO USE biomass_exrete TO DETERMINE THE IMMOBILIZATION OF ALL RELEVANT ELEMENTS.
+
+  browser()
+
   return(list(yeqm = eqm_biomass,
               parameters =
                 list(cij = cij,

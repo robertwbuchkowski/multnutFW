@@ -106,8 +106,8 @@ comana <- function(usin){
 
     mineralization[[i]] = (1-current_element_properties$p)*rowSums(current_element_assimilation*fmat[[i]]) + (prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B + # Carbon mineralization rate based on a fixed proportion of biomass
                              rowSums((AIJ[[i]])* # Net element gain from feeding
-                                       fmat$Carbon))* # consumption rates
-      Qhat* # multiply by C:X ratio to get back to units of X
+                                       fmat$Carbon))/ # consumption rates
+      Qhat* # divide by C:X ratio to get back to units of X
       as.numeric(rowSums(imat)>0) # Make X mineralization zero for all nodes without prey items.
   }
 
