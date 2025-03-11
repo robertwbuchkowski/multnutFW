@@ -9,10 +9,10 @@ checkeqm(usin, eqmtolerance = NA)
 \arguments{
 \item{usin}{The community to assess equilibrium via comana.}
 
-\item{eqmtolerance}{A value used to set the equilibrium tolerance for the food web verification. If NA, the default value used by the function all.equal is used, which is approximately 1.5e-8.}
+\item{eqmtolerance}{A value used to set the equilibrium tolerance for the food web verification. If NA, the default value used by the function all.equal is used, which is 1.5e-8.}
 }
 \value{
-Boolean: Is the community at equilibrium with inputs to the first trophic level?
+Boolean: Is the community at equilibrium?
 }
 \description{
 Check the carbon flux equilibrium output by comana.

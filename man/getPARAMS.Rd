@@ -10,7 +10,8 @@ getPARAMS(
   diet_correct = TRUE,
   Conly = FALSE,
   densitydependence = NA,
-  functionalresponse = NA
+  functionalresponse = NA,
+  returnnet = FALSE
 )
 }
 \arguments{
@@ -24,7 +25,9 @@ getPARAMS(
 
 \item{densitydependence}{Which nodes have density dependence? NA default means none of them do. Should be a vector of 0 (no DD) and 1 (DD) for each node.}
 
-\item{functionalresponse}{The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a vector of values of the handling time to use a Type II functional response.}
+\item{functionalresponse}{The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.}
+
+\item{returnnet}{A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.}
 }
 \value{
 A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.

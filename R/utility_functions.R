@@ -289,39 +289,14 @@ renamenode <- function(COMM, oldname,newname){
 #' Check the carbon flux equilibrium output by comana.
 #'
 #' @param usin The community to assess equilibrium via comana.
-#' @param eqmtolerance A value used to set the equilibrium tolerance for the food web verification. If NA, the default value used by the function all.equal is used, which is approximately 1.5e-8.
-#' @return Boolean: Is the community at equilibrium with inputs to the first trophic level?
+#' @param eqmtolerance A value used to set the equilibrium tolerance for the food web verification. If NA, the default value used by the function all.equal is used, which is 1.5e-8.
+#' @return Boolean: Is the community at equilibrium?
 #' @examples
 #' checkeqm(intro_comm)
 #' @export
 checkeqm <- function(usin, eqmtolerance = NA){
 
-  cares = comana(usin)
+  # Use the functionality in the getPARAMS function:
+  !any(getPARAMS(usin = usin, returnnet = TRUE) > 1.5e-8)
 
-  netchange = # Consumption rate
-    usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*cares$fmat$Carbon) -
-
-    # Natural death
-    usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -
-
-    # Respiration
-    usin$prop$general$Carbon$E*usin$prop$general$Carbon$B -
-
-    # Overflow Respiration
-    usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B -
-
-    # Predation
-    colSums(cares$fmat$Carbon) +
-
-    # Detritus recycling
-    usin$prop$general$Carbon$DetritusRecycling*sum(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B + usin$prop$general$Carbon$p*rowSums((1-usin$prop$assimilation$Carbon)*cares$fmat$Carbon))
-
-  # Get rid of basal trophic levels where inputs are OK
-  netchange = netchange[TLcheddar(usin$imat) != 1]
-
-  if(is.na(eqmtolerance)){
-    return(all.equal(unname(netchange),rep(0, length(netchange))))
-  }else{
-    return(all.equal(unname(netchange),rep(0, length(netchange)), tolerance = eqmtolerance))
-  }
 }
