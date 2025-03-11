@@ -63,7 +63,7 @@ comana <- function(usin){
     detritusPOS = which(prop$Carbon$isDetritus >0)
 
     for(i in detritusPOS){
-      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$DetritusRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + sum(prop$Carbon$d*prop$B))
+      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$DetritusRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + sum(prop$Carbon$d*prop$Carbon$B))
     }
   }
 

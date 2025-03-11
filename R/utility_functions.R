@@ -194,7 +194,7 @@ can_mutfeed <- function(usin){
 #' A utility function to calculate the consumption rate of each species on all prey assuming a type I functional response.
 #'
 #' @param usin The community on which feeding rate calculations are made.
-#' @param h The value of the handling time if you want to use a type II functional response. If NA, you are using a Type I functional response.
+#' @param h The matrix of the handling times that you want to use a type II functional response. If NA, you are using a Type I functional response. If you want some Type I and some Type II functional responses, include the matrix and put values of 0 for all Type I functional responses.
 #' @return A matrix of consumption rates with units set by the the biomass input units in biomass and time.
 #' @examples
 #' Cijfcn(intro_comm)
@@ -205,6 +205,10 @@ Cijfcn <- function(usin, h = NA){ # Function only requires the community inputs
   prop = usin$prop # Properties of the species
 
   Nnodes = dim(imat)[1] # Number of nodes
+
+  if(!all(is.na(h))){
+    if(any(dim(h) != dim(imat))) stop("Dimensions of h must equal those of imat.")
+  }
 
   Bpred = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes) # A matrix of predators
   Bprey = matrix(prop$general$Carbon$B, ncol = Nnodes, nrow = Nnodes, byrow = T) # A matrix of prey

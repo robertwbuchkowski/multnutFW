@@ -5,7 +5,9 @@
 #' @param diet_correct Boolean: Does the organism correct it's diet?
 #' @param Conly Boolean: Is the model meant for carbon only?
 #' @param densitydependence Which nodes have density dependence? NA default means none of them do. Should be a vector of 0 (no DD) and 1 (DD) for each node.
-#' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a vector of values of the handling time to use a Type II functional response.
+#' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.
+#' @param inorganic_eqm The amount of each chemical element at equilibrium in the same units as node biomass in the community.
+#' @param inorganicexport A vector with the export rate for each chemical element in inorganic form. Default NA means zero. Carbon is meaningless because it is not available for uptake.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
@@ -18,7 +20,9 @@ getPARAMS <- function(usin,
                       diet_correct = TRUE,
                       Conly = FALSE,
                       densitydependence = NA,
-                      functionalresponse = NA){
+                      functionalresponse = NA,
+                      inorganic_eqm = NA,
+                      inorganicexport = NA){
 
   # Set the diet limits if they are not included
   if(any(is.na(DIETLIMITS))){
@@ -41,10 +45,23 @@ getPARAMS <- function(usin,
 
   # Check to make sure the density-dependence vector is the right length or make a single value a vector of the right length
   if(any(is.na(densitydependence))){
-    densitydependence = rep(0, Nnodes)
-  }else{
-    stopifnot(length(densitydependence) == Nnodes)
+    densitydependence = rep(0, Nnodes)}
+
+  stopifnot(length(densitydependence) == Nnodes)
+
+  # Check to make sure the inorganic equilibrium vector is the right length or make a single value a vector of the right length
+  if(any(is.na(inorganic_eqm))){
+    inorganic_eqm = rep(0, length(usin$prop$assimilation))
   }
+
+  stopifnot(length(inorganic_eqm) == length(usin$prop$assimilation))
+
+  # Check to make sure the inorganic export vector is the right length or make a single value a vector of the right length
+  if(any(is.na(inorganicexport))){
+    inorganicexport = rep(0, length(usin$prop$assimilation))
+  }
+
+  stopifnot(length(inorganicexport) == length(usin$prop$assimilation))
 
   death = cbind(d = usin$prop$general$Carbon$d,
                 dd = usin$prop$general$Carbon$d/usin$prop$general$Carbon$B,
@@ -54,6 +71,13 @@ getPARAMS <- function(usin,
     cij = Cijfcn(usin) # Get the consumption rate matrix for the base parameters (units 1/ (gC * time))
   }else{
     cij = Cijfcn(usin, h = functionalresponse)
+  }
+
+  if(any(is.na(functionalresponse))){
+    hmat = usin$imat
+    hmat[hmat > 0] = 0
+  }else{
+    hmat = functionalresponse
   }
 
   # Get the vector of equilibrium biomass:
@@ -68,7 +92,7 @@ getPARAMS <- function(usin,
 
   eqm_biomass = eqm_biomass*sweep(Qmat, 1, Qmat[, 1], "/")
 
-  eqm_biomass = rbind(eqm_biomass, rep(0, ncol(eqm_biomass)))
+  eqm_biomass = rbind(eqm_biomass, inorganic_eqm)
 
   rownames(eqm_biomass) = c(rownames(usin$imat), "Inorganic")
 
@@ -87,7 +111,7 @@ getPARAMS <- function(usin,
   detplant = usin$prop$general$Carbon[, c("DetritusRecycling", "isDetritus", "isPlant")]
 
   # Immobilization parameters:
-  canIMMmat = sapply(usin$prop$general, FUN = function(X){X$canIMM})
+  canIMMmat = rbind(sapply(usin$prop$general, FUN = function(X){X$canIMM}), rep(0, length(usin$prop$assimilation)))
 
   # Get E parameters: (NOT IN USE ATM)
   biomass_exrete = (do.call("cbind",comana(usin)$mineralization) -
@@ -104,7 +128,7 @@ getPARAMS <- function(usin,
 
   # Calculate input rates:
 
-  # browser()
+  if(sum(detplant$DetritusRecycling ) > 1) stop("DetritusRecycling must sum to 1")
 
   # Gains from consumption:
   net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
@@ -113,21 +137,74 @@ getPARAMS <- function(usin,
     # Natural death:
     matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
     # Excretion:
-    biomass_exrete
+    biomass_exrete +
 
-  # NEXT STEPS HERE ARE TO ADD RECYCLING DETRITUS AND ALSO USE biomass_exrete TO DETERMINE THE IMMOBILIZATION OF ALL RELEVANT ELEMENTS.
+    # Detritus recycling:
+    matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+    matrix(
+      colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+             colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
+      nrow = nrow(Qmat), ncol = ncol(Qmat), byrow = T) # arrange in a matrix by row so that the elements are in the columns.
 
-  browser()
+  # Reset small fluxes to zero:
+  net[abs(net) < 1e-12] = 0
+
+  # Add in the inorganic gains/losses
+  net = rbind(net, colSums(biomass_exrete))
+
+  rownames(net) = c(rownames(biomass_exrete), "Inorganic")
+
+  # Add in inorganic losses
+  net[dim(net)[1],]  = net[dim(net)[1],] - inorganicexport*inorganic_eqm
+
+
+  # Add in inorganic N
+  # Internal function to add inorganic to matrix
+  add_inorganic <- function(mat, val = 0) {
+    # Add a row of zeros
+    mat <- rbind(mat, Inorganic = rep(val, ncol(mat)))
+
+    # Add a column of zeros
+    mat <- cbind(mat, Inorganic = rep(val, nrow(mat)))
+
+    return(mat)
+  }
+
+  cij = add_inorganic(cij)
+
+  hmat = add_inorganic(hmat)
+  rownames(hmat) = rownames(cij)
+
+  pmat = add_inorganic(pmat, val = 1)
+  rownames(pmat) = rownames(cij)
+
+  detplant = rbind(detplant, c(0,0,0))
+  rownames(detplant) = rownames(cij)
+
+  assimilation = lapply(assimilation, add_inorganic, val = 1)
+
+  death = rbind(death, c(0,0,0))
+  rownames(death) = rownames(cij)
+
+  rownames(canIMMmat) = rownames(cij)
+
+  ECarbon = c(usin$prop$general$Carbon$E, 0)
+  names(ECarbon) = rownames(cij)
+
+  # browser()
+
+  # NEXT STEP IS TO CALCULATE THE NET CHANGES AND INPUT RATES. ALSO NEED TO DEAL WITH DETRITUS.
 
   return(list(yeqm = eqm_biomass,
               parameters =
                 list(cij = cij,
-                     h = functionalresponse,
+                     h = hmat,
                      death = death,
                      pmat = pmat,
                      assimilation = assimilation,
                      detplant = detplant,
                      canIMMmat = canIMMmat,
-                     ECarbon = usin$prop$general$Carbon$E),
+                     ECarbon = ECarbon,
+                     inorganicexport = inorganicexport),
               net = net))
 }
