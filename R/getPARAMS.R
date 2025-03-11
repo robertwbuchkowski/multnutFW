@@ -52,7 +52,7 @@ getPARAMS <- function(usin,
                 dd = usin$prop$general$Carbon$d/usin$prop$general$Carbon$B,
                 densitydependence = densitydependence)
 
-  if(is.na(functionalresponse)){
+  if(any(is.na(functionalresponse))){
     cij = Cijfcn(usin) # Get the consumption rate matrix for the base parameters (units 1/ (gC * time))
   }else{
     cij = Cijfcn(usin, h = functionalresponse)
@@ -129,9 +129,10 @@ getPARAMS <- function(usin,
                        h = hmat,
                        death = death,
                        pmat = pmat,
+                       Qmat = sweep(Qmat, 1, Qmat[, 1], "/"),
                        assimilation = assimilation,
                        detplant = detplant,
                        canIMMmat = canIMMmat,
-                       ECarbon = usin$prop$general$Carbon$E)))
+                       ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat)))
   }
 }
