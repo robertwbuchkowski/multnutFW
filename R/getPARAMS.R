@@ -8,6 +8,7 @@
 #' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.
 #' @param inorganic_eqm The amount of each chemical element at equilibrium in the same units as node biomass in the community.
 #' @param inorganicexport A vector with the export rate for each chemical element in inorganic form. Default NA means zero. Carbon is meaningless because it is not available for uptake.
+#' @param modelinputs A vector of inputs for each node in the food web at the same rate.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
@@ -22,7 +23,8 @@ getPARAMS <- function(usin,
                       densitydependence = NA,
                       functionalresponse = NA,
                       inorganic_eqm = NA,
-                      inorganicexport = NA){
+                      inorganicexport = NA,
+                      modelinputs = NA){
 
   # Set the diet limits if they are not included
   if(any(is.na(DIETLIMITS))){
@@ -42,6 +44,7 @@ getPARAMS <- function(usin,
   }
 
   Nnodes = dim(usin$imat)[1] # Number of nodes
+  Nelements = length(usin$prop$assimilation) # Number of elements
 
   # Check to make sure the density-dependence vector is the right length or make a single value a vector of the right length
   if(any(is.na(densitydependence))){
@@ -51,17 +54,23 @@ getPARAMS <- function(usin,
 
   # Check to make sure the inorganic equilibrium vector is the right length or make a single value a vector of the right length
   if(any(is.na(inorganic_eqm))){
-    inorganic_eqm = rep(0, length(usin$prop$assimilation))
+    inorganic_eqm = rep(0, Nelements)
   }
 
-  stopifnot(length(inorganic_eqm) == length(usin$prop$assimilation))
+  stopifnot(length(inorganic_eqm) == Nelements)
 
   # Check to make sure the inorganic export vector is the right length or make a single value a vector of the right length
   if(any(is.na(inorganicexport))){
-    inorganicexport = rep(0, length(usin$prop$assimilation))
+    inorganicexport = rep(0, Nelements)
   }
 
-  stopifnot(length(inorganicexport) == length(usin$prop$assimilation))
+  stopifnot(length(inorganicexport) == Nelements)
+
+  # Check to make sure the model inputs vector is the right length or make a single value a vector of the right length
+  if(any(is.na(modelinputs))){
+    modelinputs = rep(0, Nnodes)}
+
+  stopifnot(length(modelinputs) == Nnodes)
 
   death = cbind(d = usin$prop$general$Carbon$d,
                 dd = usin$prop$general$Carbon$d/usin$prop$general$Carbon$B,
@@ -111,7 +120,7 @@ getPARAMS <- function(usin,
   detplant = usin$prop$general$Carbon[, c("DetritusRecycling", "isDetritus", "isPlant")]
 
   # Immobilization parameters:
-  canIMMmat = rbind(sapply(usin$prop$general, FUN = function(X){X$canIMM}), rep(0, length(usin$prop$assimilation)))
+  canIMMmat = rbind(sapply(usin$prop$general, FUN = function(X){X$canIMM}), rep(0, Nelements))
 
   # Get E parameters: (NOT IN USE ATM)
   biomass_exrete = (do.call("cbind",comana(usin)$mineralization) -
@@ -156,6 +165,10 @@ getPARAMS <- function(usin,
 
   # Add in inorganic losses
   net[dim(net)[1],]  = net[dim(net)[1],] - inorganicexport*inorganic_eqm
+
+  # Add the detritus inputs:
+  # browser()
+  net = net + rbind(matrix(modelinputs, nrow = nrow(Qmat), ncol = ncol(Qmat))*Qmat, rep(0, Nelements))
 
 
   # Add in inorganic N
