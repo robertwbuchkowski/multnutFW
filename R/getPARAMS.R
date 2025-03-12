@@ -6,13 +6,19 @@
 #' @param Conly Boolean: Is the model meant for carbon only?
 #' @param densitydependence Which nodes have density dependence? NA default means none of them do. Should be a vector of 0 (no DD) and 1 (DD) for each node.
 #' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.
+#' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web.
+#' @param inorganicinput A vector of inputs for the inorganic nutrients.
+#' @param inorganicloss A vector of loss rates for the inorganic nutrients.
 #' @param returnnet A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
 #' @examples
 #' # Basic call.
-#' getPARAMS(intro_comm)
+#' ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
+#' ii = c(0,10,0.5,0.01)
+#' io = c(0,0.1, 0.1, 0.1)
+#' getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io)
 #' @export
 getPARAMS <- function(usin,
                       DIETLIMITS = NA,
@@ -20,6 +26,9 @@ getPARAMS <- function(usin,
                       Conly = FALSE,
                       densitydependence = NA,
                       functionalresponse = NA,
+                      externalinputs = NA,
+                      inorganicinputs = NA,
+                      inorganicloss = NA,
                       returnnet = FALSE){
 
   # Set the diet limits if they are not included
@@ -103,26 +112,66 @@ getPARAMS <- function(usin,
   # Confirm net change:
   if(sum(detplant$DetritusRecycling ) > 1) stop("DetritusRecycling must sum to 1")
 
-  # Gains from consumption:
-  net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
-    # Losses from predation:
-    sapply(comana(usin)$fmat, colSums) -
-    # Natural death:
-    matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
-    # Excretion:
-    biomass_exrete +
-
-    # Detritus recycling:
-    matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
-    matrix(
-      colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
-             colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")) + # A vector of carcases
-        colSums(biomass_exrete), # A vector of mineralization rates also back into the detritus pool
-      nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
-
   if(returnnet){
+    # Gains from consumption:
+    net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
+      # Losses from predation:
+      sapply(comana(usin)$fmat, colSums) -
+      # Natural death:
+      matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
+      # Excretion:
+      biomass_exrete +
+
+      # Detritus recycling:
+      matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+      matrix(
+        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+          colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")) + # A vector of carcases
+          colSums(biomass_exrete), # A vector of mineralization rates also back into the detritus pool
+        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
+
     return(net)
   }else{
+
+    # Create inorganic state variables:
+    inorganic_eqm = (inorganicinputs + # Input rates
+                       colSums(biomass_exrete))/ # A vector of mineralization rates
+      inorganicloss # Loss rates.
+
+    # Reset inorganic carbon to zero if needed:
+    inorganic_eqm[is.infinite(inorganic_eqm)] = 0
+
+    names(inorganic_eqm) = paste0("Inorganic_", names(assimilation))
+
+    if(any(inorganic_eqm < 0)) stop("Inorganic pool is less than zero. You need to increase input rates to match food web demand or decrease demand in the food web.")
+
+    # Paste inorganic state variables:
+    eqm_biomass = c(eqm_biomass, inorganic_eqm)
+
+    # Gains from consumption:
+    net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
+      # Losses from predation:
+      sapply(comana(usin)$fmat, colSums) -
+      # Natural death:
+      matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
+      # Excretion:
+      biomass_exrete +
+      # Detritus recycling:
+      matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+      matrix(
+        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+          colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
+        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
+
+    net[abs(net) < 1e-8] = 0
+    # Check that detritus inputs meet demand:
+    if(any(externalinputs < net)){
+      print(net)
+      stop("External inputs need to be greater than demand. This is probably an issue with the detritus pool for one or more elements. See the net changes above and increase inputs so that they are larger.")
+    }
+    dID = which(detplant$DetritusRecycling == 1)
+    detritusloss = (externalinputs[dID,] + net[dID,])/usin$prop$general$Carbon$B[dID]
+
     return(list(yeqm = eqm_biomass,
                 parameters =
                   list(cij = cij,
@@ -133,6 +182,10 @@ getPARAMS <- function(usin,
                        assimilation = assimilation,
                        detplant = detplant,
                        canIMMmat = canIMMmat,
-                       ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat)))
+                       ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat,
+                       externalinputs = externalinputs,
+                       detritusloss = detritusloss,
+                       inorganicinputs = inorganicinputs,
+                       inorganicloss = inorganicloss)))
   }
 }
