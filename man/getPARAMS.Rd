@@ -11,6 +11,9 @@ getPARAMS(
   Conly = FALSE,
   densitydependence = NA,
   functionalresponse = NA,
+  externalinputs = NA,
+  inorganicinputs = NA,
+  inorganicloss = NA,
   returnnet = FALSE
 )
 }
@@ -27,6 +30,12 @@ getPARAMS(
 
 \item{functionalresponse}{The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.}
 
+\item{externalinputs}{A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web.}
+
+\item{inorganicinputs}{A vector of inputs for the inorganic nutrients.}
+
+\item{inorganicloss}{A vector of loss rates for the inorganic nutrients.}
+
 \item{returnnet}{A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.}
 }
 \value{
@@ -40,5 +49,8 @@ A function to get the parameters of a food web model for simulation purposes. It
 }
 \examples{
 # Basic call.
-getPARAMS(intro_comm)
+ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
+ii = c(0,10,0.5,0.01)
+io = c(0,0.1, 0.1, 0.1)
+getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io)
 }

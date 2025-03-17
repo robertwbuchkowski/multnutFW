@@ -132,7 +132,7 @@ The function creates an interaction matrix and also breaks out the assimilation 
 
 ### Modifying respiration parameters
 
-The model contains respiration parameters that either take respiration as a function of biomass $E$ or as a function of consumption rate $p$. The package contains functions to switch between these two parameters during the calculations in $comana$. At equilibrium, the difference does not matter, but it is important when simulating the food web. Simulations will be explored next.
+The model contains respiration parameters that either take respiration as a function of biomass $E$ or as a function of consumption rate $p$. The package contains functions to switch between these two parameters during the calculations in $comana$. At equilibrium, the difference does not matter, but it is important when simulating the food web.
 
 ```{r example10}
 

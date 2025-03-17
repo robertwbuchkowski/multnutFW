@@ -51,7 +51,7 @@ in units of carbon.
 ``` r
 intro_analysis$consumption
 #>       Pred      Prey1      Prey2   Microbe1   Detritus 
-#>  0.1967213 38.3267880 10.3542095  8.4071270 32.6700000
+#>  0.1967213 38.3267880 10.3542095  8.4071270  2.0700000
 ```
 
 It also outputs matrices of carbon (and any other nutrient) flow
@@ -79,16 +79,16 @@ intro_analysis$mineralization
 #>     0.02     0.80     0.25     1.00     0.00 
 #> 
 #> $Nitrogen
-#>        Pred       Prey1       Prey2    Microbe1    Detritus 
-#>   0.1211446 -80.4897886  -8.4570714 -21.2722718   0.0000000 
+#>         Pred        Prey1        Prey2     Microbe1     Detritus 
+#>  0.005970492 -3.482310214 -0.338282856 -0.850890872  0.000000000 
 #> 
 #> $Phosphorus
-#>        Pred       Prey1       Prey2    Microbe1    Detritus 
-#>  -0.1358314  20.8366060 242.1233328  62.5000000   0.0000000 
+#>          Pred         Prey1         Prey2      Microbe1      Detritus 
+#> -0.0001222482  0.0083346424  0.0619835732  0.0160000000  0.0000000000 
 #> 
 #> $Calcium
-#>       Pred      Prey1      Prey2   Microbe1   Detritus 
-#>   2.981265  44.282394 215.220740  55.555556   0.000000
+#>        Pred       Prey1       Prey2    Microbe1    Detritus 
+#> 0.001192506 0.021432679 0.069731520 0.018000000 0.000000000
 ```
 
 Notice how some of the mineralization rates are negative. Microbe1 can
@@ -165,21 +165,21 @@ whomineralizes(intro_comm_resp)
 #> 3     Prey2     Carbon  0.0947365386  0.000000e+00
 #> 4  Microbe1     Carbon  0.0154947179  0.000000e+00
 #> 5  Detritus     Carbon  0.0000000000  0.000000e+00
-#> 6      Pred   Nitrogen -0.0040832407  2.070124e-02
-#> 7     Prey1   Nitrogen  0.0000000000  5.799253e-01
-#> 8     Prey2   Nitrogen  0.0000000000  1.806213e-01
-#> 9  Microbe1   Nitrogen  1.0040832407 -4.005648e-01
-#> 10 Detritus   Nitrogen  0.0000000000  2.046118e+01
-#> 11     Pred Phosphorus  0.0000000000  1.160009e-03
-#> 12    Prey1 Phosphorus  0.7079718439  7.188048e-02
-#> 13    Prey2 Phosphorus  0.2762659732 -6.176048e-05
-#> 14 Microbe1 Phosphorus  0.0157621829  0.000000e+00
-#> 15 Detritus Phosphorus  0.0000000000 -1.448479e+00
-#> 16     Pred    Calcium  0.0009053197  1.146800e-03
-#> 17    Prey1    Calcium  0.7184486766  6.923348e-02
-#> 18    Prey2    Calcium  0.2654981710 -1.993322e-04
-#> 19 Microbe1    Calcium  0.0151478327 -1.239919e-16
-#> 20 Detritus    Calcium  0.0000000000 -1.392023e+00
+#> 6      Pred   Nitrogen -0.0050357333  2.163067e-02
+#> 7     Prey1   Nitrogen  0.0000000000  5.803886e-01
+#> 8     Prey2   Nitrogen  0.0000000000  1.469014e-01
+#> 9  Microbe1   Nitrogen  1.0050357333 -4.009448e-01
+#> 10 Detritus   Nitrogen  0.0000000000  2.114535e+01
+#> 11     Pred Phosphorus  0.0000000000  8.204783e-04
+#> 12    Prey1 Phosphorus  0.7911450285  5.159710e-02
+#> 13    Prey2 Phosphorus  0.1975820508 -1.791033e-04
+#> 14 Microbe1 Phosphorus  0.0112729208  0.000000e+00
+#> 15 Detritus Phosphorus  0.0000000000 -1.035934e+00
+#> 16     Pred    Calcium  0.0008248540  8.500475e-04
+#> 17    Prey1    Calcium  0.7920566037  5.113900e-02
+#> 18    Prey2    Calcium  0.1959393451 -1.830728e-04
+#> 19 Microbe1    Calcium  0.0111791972 -1.379045e-16
+#> 20 Detritus    Calcium  0.0000000000 -1.027322e+00
 ```
 
 ### Using your own food web
@@ -324,7 +324,6 @@ as a function of biomass $E$ or as a function of consumption rate $p$.
 The package contains functions to switch between these two parameters
 during the calculations in $comana$. At equilibrium, the difference does
 not matter, but it is important when simulating the food web.
-Simulations will be explored next.
 
 ``` r
 
