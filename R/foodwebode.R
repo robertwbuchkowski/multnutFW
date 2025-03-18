@@ -15,13 +15,19 @@ foodwebode <- function(t,y,pars){
   detloss = matrix(0, nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
   detloss[which(pars$detplant$isDetritus == 1),] = pars$detritusloss
 
+  # Calculate the consumption rates:
+  predC = matrix(ymat[,1], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
+  preyC = t(predC)
+  consumption_Carbon = pars$cij*predC*preyC/(1 + pars$cij*pars$h*preyC)
+
   # Calculate consumption rates:
   consumption = lapply(c(1,2,3,4),
                        function(lai) {
-                         predC = matrix(ymat[,lai], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
-                         preyC = t(predC)
-                         consumption = pars$cij*predC*preyC/(1 + pars$cij*pars$h*preyC)
+                         consumption_Carbon*matrix(pars$Qmat[,lai], nrow = nrow(pars$cij), ncol = ncol(pars$cij), byrow = T)
                        })
+
+
+  rm(predC, preyC, consumption_Carbon)
 
   netwithoutmineralization =
 
