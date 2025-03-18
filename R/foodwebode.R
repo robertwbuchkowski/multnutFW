@@ -11,6 +11,8 @@ foodwebode <- function(t,y,pars){
 
   ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
 
+  Qmat = sweep(ymat, 1, ymat[, 1], "/")
+
   # Losses from detritus:
   detloss = matrix(0, nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
   detloss[which(pars$detplant$isDetritus == 1),] = pars$detritusloss
@@ -23,7 +25,7 @@ foodwebode <- function(t,y,pars){
   # Calculate consumption rates:
   consumption = lapply(c(1,2,3,4),
                        function(lai) {
-                         consumption_Carbon*matrix(pars$Qmat[,lai], nrow = nrow(pars$cij), ncol = ncol(pars$cij), byrow = T)
+                         consumption_Carbon*matrix(Qmat[,lai], nrow = nrow(pars$cij), ncol = ncol(pars$cij), byrow = T)
                        })
 
 
@@ -57,7 +59,7 @@ foodwebode <- function(t,y,pars){
     matrix(c(pars$ECarbon*ymat[,1], rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
 
   # Calculate the mineralization rate given the change in carbon and fixed C:X ratio for all non-detritus nodes:
-  mineralization = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*pars$Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
+  mineralization = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
   netwithmineralization = netwithoutmineralization - mineralization + colSums(mineralization)*matrix(pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
