@@ -34,10 +34,10 @@ foodwebode <- function(t,y,pars){
   netwithoutmineralization =
 
     # Gains from outside the system:
-    pars$externalinputs +
+    pars$externalinputs -
 
     # Loss from detritus:
-    detloss +
+    detloss*ymat +
 
     # Gains from consumption:
     pars$pmat*sapply(Map(function(XX,YY) XX*YY, consumption, pars$assimilation), rowSums) -
@@ -66,10 +66,17 @@ foodwebode <- function(t,y,pars){
   # Calculate changes in inorganic pools:
   inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
 
-  dinorganic = colSums(mineralization) + pars$inorganicinputs + inorganicSV*pars$inorganicloss
+  dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
 
   dy = c(netwithmineralization, dinorganic)
   names(dy) = names(y)
 
-  return(list(c(dy)))
+  dr = matrix(pars$detplant$DetritusRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
+    matrix(
+      colSums(sapply(Map(function(XX,YY) XX*YY, consumption, lapply(pars$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+        colSums(matrix(pars$death[,1]*(1-pars$death[,3]), nrow = nrow(ymat), ncol = ncol(ymat))*ymat - # density-independent
+                  matrix(pars$death[,2]*(pars$death[,3]), nrow = nrow(ymat), ncol = ncol(ymat))*ymat*ymat), # density-dependent + # A vector of carcases
+      nrow = nrow(ymat), ncol = ncol(ymat),byrow = T)
+
+  return(list(c(dy), detrecycle = dr))
 }
