@@ -170,7 +170,7 @@ getPARAMS <- function(usin,
       stop("External inputs need to be greater than demand. This is probably an issue with the detritus pool for one or more elements. See the net changes above and increase inputs so that they are larger.")
     }
     dID = which(detplant$DetritusRecycling == 1)
-    detritusloss = (externalinputs[dID,] + net[dID,])/usin$prop$general$Carbon$B[dID]
+    detritusloss = (externalinputs[dID,] + net[dID,])/c(usin$prop$general$Carbon$B[dID]*sweep(Qmat, 1, Qmat[, 1], "/")[dID,])
 
     return(list(yeqm = eqm_biomass,
                 parameters =
