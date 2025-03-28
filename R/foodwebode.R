@@ -44,9 +44,9 @@ foodwebode <- function(t,y,pars){
     # Losses from predation:
     sapply(consumption, colSums) -
     # Natural death:
-    matrix(pars$death[,1]*(1-pars$death[,3]), nrow = nrow(ymat), ncol = ncol(ymat))*ymat - # density-independent
-    matrix(pars$death[,2]*(pars$death[,3]), nrow = nrow(ymat), ncol = ncol(ymat))*ymat*ymat + # density-dependent
-
+    matrix(pars$death[,1]*(1-pars$death[,3])*ymat[,1] + # density-independent
+             pars$death[,2]*(pars$death[,3])*ymat[,1]*ymat[,1], # density-dependent
+           nrow = nrow(ymat), ncol = ncol(ymat))*Qmat +
     # Detritus recycling:
     matrix(pars$detplant$DetritusRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
     matrix(
