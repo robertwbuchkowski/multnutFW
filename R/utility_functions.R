@@ -218,6 +218,8 @@ Cijfcn <- function(usin, h = NA){ # Function only requires the community inputs
   }else{
     cij = fmat / (Bprey * (Bpred - fmat * h)) # Get the consumption rate
   }
+
+  if(any(cij < 0)) stop("Handling time is too long for given equilibrium values and consumption rates.")
   return(cij) # Return the consumption rates (gC^-1 time^-1)
 }
 
