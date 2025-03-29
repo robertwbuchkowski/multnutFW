@@ -79,5 +79,5 @@ foodwebode <- function(t,y,pars){
                  pars$death[,2]*pars$death[,3]*ymat[,1]*ymat[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat), # density-dependent death
       nrow = nrow(ymat), ncol = ncol(ymat),byrow = T)
 
-  return(list(c(dy), detrecycle = dr, nwm = netwithoutmineralization, min = mineralization))
+  return(list(dy))
 }
