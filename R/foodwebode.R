@@ -62,22 +62,32 @@ foodwebode <- function(t,y,pars){
   mineralization = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
 
-  netwithmineralization = netwithoutmineralization - mineralization
+  # Confirm that immobilization is only happening for species for which it is possible:
+  mineralization2 = mineralization
+  mineralization2[abs(mineralization2) < 1e-8] = 0
 
-  # Calculate changes in inorganic pools:
+  if(any(mineralization2*(1- pars$canIMMmat) < 0)) stop("Immobilization is occuring in error")
+  rm(mineralization2)
+
+  # Assign the inorganic nutreint pools:
   inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
 
+  # Determine if mineralization needs to be reduced to balance demand:
+  netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+
+  if(any(netinog - colSums(mineralization) < 0)){
+    print(paste("Mineral nutrient insufficient:",paste(netinog - colSums(mineralization), collapse = ","), "at", t))
+    print(paste("--------",paste(colSums(mineralization), collapse = ",")))
+  }
+
+  # Calculate changes in inorganic pools:
   dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+
+  # Calculate the net changes with mineralization:
+  netwithmineralization = netwithoutmineralization - mineralization
 
   dy = c(netwithmineralization, dinorganic)
   names(dy) = names(y)
-
-  dr = matrix(pars$detplant$DetritusRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
-    matrix(
-      colSums(sapply(Map(function(XX,YY) XX*YY, consumption, lapply(pars$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
-        colSums(matrix(pars$death[,1]*(1-pars$death[,3])*ymat[,1] + # density-independent death
-                 pars$death[,2]*pars$death[,3]*ymat[,1]*ymat[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat), # density-dependent death
-      nrow = nrow(ymat), ncol = ncol(ymat),byrow = T)
 
   return(list(dy))
 }
