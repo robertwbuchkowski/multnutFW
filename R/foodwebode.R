@@ -62,23 +62,36 @@ foodwebode <- function(t,y,pars){
   mineralization = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
 
-  # Confirm that immobilization is only happening for species for which it is possible:
+  # Assign the inorganic nutrient pools:
+  inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
+
+  # Calculate the total amount of inorganic nutrient available to the food web:
+  netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+
+  # Add in any available mineral nutrient to the species that can immobilize it:
+  if(any(netinog <colSums(pars$canIMMmat*mineralization))) stop("Not enough inorganic nutrient to meet demand.")
+
+  # Calculate the limiting nutrient:
   mineralization2 = mineralization
   mineralization2[abs(mineralization2) < 1e-8] = 0
+  mineralization2[pars$canIMMmat == 1] = 1 # make this bigger than C, so that it can't be the limiting nutrient
+
+  limitingnutrient = apply(mineralization2, 1, which.min)
+
+  minlimnut = rep(NA, dim(ymat)[1])
+
+  for(i in 1:dim(ymat)[1]){
+    minlimnut[i] = netwithoutmineralization[i, limitingnutrient[i]]
+  }
+
+  # Confirm that immobilization is only happening for species for which it is possible:
+
+
 
   if(any(mineralization2*(1- pars$canIMMmat) < 0)) stop("Immobilization is occuring in error")
   rm(mineralization2)
 
-  # Assign the inorganic nutreint pools:
-  inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
 
-  # Determine if mineralization needs to be reduced to balance demand:
-  netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
-
-  if(any(netinog - colSums(mineralization) < 0)){
-    print(paste("Mineral nutrient insufficient:",paste(netinog - colSums(mineralization), collapse = ","), "at", t))
-    print(paste("--------",paste(colSums(mineralization), collapse = ",")))
-  }
 
   # Calculate changes in inorganic pools:
   dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
@@ -89,5 +102,5 @@ foodwebode <- function(t,y,pars){
   dy = c(netwithmineralization, dinorganic)
   names(dy) = names(y)
 
-  return(list(dy))
+  return(list(dy, limitingnutrient = limitingnutrient))
 }
