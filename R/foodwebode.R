@@ -69,7 +69,23 @@ foodwebode <- function(t,y,pars){
   netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
 
   # Add in any available mineral nutrient to the species that can immobilize it:
-  if(any(netinog <colSums(pars$canIMMmat*mineralization))) stop("Not enough inorganic nutrient to meet demand.")
+  if(any(netinog < colSums(pars$canIMMmat*mineralization))) stop("Not enough inorganic nutrient to meet demand.")
+
+  # Calculate the equivalent Carbon needed for each element:
+  browser()
+  netwithlimiting = equivC = netwithoutmineralization
+  equivC[abs(equivC) < 1e-8] = 0 # Zero out small numbers
+  equivC = equivC*Qmat # Convert everything to carbon
+  equivC[pars$canIMMmat == 1] = NA # make this not applicable, because we don't care when they can immobilize
+
+  equivmin = apply(equivC, 1, min, na.rm = T) # Get the minimum growth rate possible.
+  equivmin = ifelse(equivmin < 0, equivmin, 0)
+
+  for(i in 1:dim(equivC)[1]){
+    netwithlimiting[i,1] = netwithoutmineralization[1,1] - equivmin[i]
+
+    netwithlimiting[i,] = netwithlimiting[i,1]/Qmat[i,]
+  }
 
   # Calculate the limiting nutrient:
   mineralization2 = mineralization
