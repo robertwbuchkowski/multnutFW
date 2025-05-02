@@ -68,9 +68,6 @@ foodwebode <- function(t,y,pars){
   # Calculate the total amount of inorganic nutrient available to the food web:
   netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
 
-  # Add in any available mineral nutrient to the species that can immobilize it:
-  if(any(netinog < colSums(pars$canIMMmat*mineralization))) stop("Not enough inorganic nutrient to meet demand.")
-
   # Create a function to expand the matrix:
   expand_mat <- function(matrices){
 
@@ -92,8 +89,6 @@ foodwebode <- function(t,y,pars){
     return(larger_matrix)
   }
 
-  browser()
-
   f.rhs.a = c(t((netwithoutmineralization[,1]*Qmat - netwithoutmineralization)[,-1]))
 
   f.con.a = expand_mat(lapply(1:dim(Qmat)[1],
@@ -103,7 +98,9 @@ foodwebode <- function(t,y,pars){
 
   f.dir.a = rep("=", length(f.rhs.a))
 
-  f.rhs.b = rep(0, length(Qmat))
+  browser()
+
+  f.rhs.b = as.vector(t(sweep(pars$canIMMmat,2,as.vector(inorganicSV)*-1, "*"))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
 
   f.con.b = expand_mat(
     replicate(dim(Qmat)[1],
@@ -113,6 +110,10 @@ foodwebode <- function(t,y,pars){
 
   f.dir.b = rep(">=", length(Qmat))
 
+  # Now we need to add constraints for any potential conflict between nodes:
+  f.con.c = 1
+
+
   f.obj = rep(0, dim(Qmat)[2]); f.obj[1] = 1; f.obj = rep(f.obj, times = dim(Qmat)[1])
 
   min_sol = lpSolve::lp(direction = "min", f.obj,
@@ -120,38 +121,7 @@ foodwebode <- function(t,y,pars){
                         c(f.dir.a, f.dir.b),
                         c(f.rhs.a, f.rhs.b))
 
-  mineralization2 = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)
-
-  # Calculate mineralization:
-  mineralization_list = vector('list', length = dim(Qmat)[1])
-
-  for(ii in 1:length(mineralization_list)){
-    f.rhs.a = unname(c((netwithoutmineralization[,1]*Qmat - netwithoutmineralization)[ii,-1]))
-
-    f.con.a = cbind(Qmat[ii,-1], diag(x=-1, nrow = dim(Qmat)[2]-1, ncol = dim(Qmat)[2]-1))
-
-    f.dir.a = rep("=", dim(f.con.a)[1])
-
-    f.rhs.b = rep(0, dim(Qmat)[2])
-    #unname(pars$canIMMmat[ii,-1]*netinog[-1]*-1)
-    #rep(0, dim(Qmat)[2]) # where to add inorganic...
-
-    f.con.b = diag(x=1, nrow = dim(Qmat)[2], ncol = dim(Qmat)[2])
-
-    f.dir.b = rep(">=", dim(Qmat)[2])
-
-    f.obj = rep(0, dim(Qmat)[2]); f.obj[1] = 1
-
-    min_sol = lpSolve::lp(direction = "min", f.obj,
-                          rbind(f.con.a, f.con.b),
-                          c(f.dir.a, f.dir.b),
-                          c(f.rhs.a, f.rhs.b))
-
-    mineralization_list[[ii]] = min_sol$solution
-  }
-
-
-  mineralization3 = do.call("rbind", mineralization_list)#*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
+  mineralization2 = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
   # Calculate the equivalent Carbon needed for each element:
   netwithlimiting = equivC = netwithoutmineralization
