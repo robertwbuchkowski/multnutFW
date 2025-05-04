@@ -111,8 +111,12 @@ foodwebode <- function(t,y,pars){
   f.dir.b = rep(">=", length(Qmat))
 
   # Now we need to add constraints for any potential conflict between nodes:
-  f.con.c = 1
+  f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = length(Qmat))
 
+  te01 = which(pars$canIMMmat ==1, arr.ind = T)
+  for(te01i in nrow(te01)){
+
+  }
 
   f.obj = rep(0, dim(Qmat)[2]); f.obj[1] = 1; f.obj = rep(f.obj, times = dim(Qmat)[1])
 
