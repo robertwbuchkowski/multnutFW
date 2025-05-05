@@ -87,21 +87,27 @@ foodwebode <- function(t,y,pars){
 
   f.rhs.a = c(t((netwithoutmineralization[,1]*Qmat - netwithoutmineralization)[,-1]))
 
+  # This constraint matrix contains the stoichiometric balance. There is the C:X ratio and then mineralization followed by immobilization (negative mineralization). lpSolve requires all solution values to be positive, so we need a separate value for immobilization.
   f.con.a = expand_mat(lapply(1:dim(Qmat)[1],
                               function(X){
-                                cbind(Qmat[X,-1], diag(x=-1, nrow = dim(Qmat)[2]-1, ncol = dim(Qmat)[2]-1))
+                                cbind(
+                                  cbind(Qmat[X,-1], diag(x=-1, nrow = dim(Qmat)[2]-1, ncol = dim(Qmat)[2]-1)),
+                                  diag(x=unname(pars$canIMMmat[X,2:dim(pars$canIMMmat)[2]]), nrow = dim(Qmat)[2]-1, ncol = dim(Qmat)[2]-1))
                               }))
 
   f.dir.a = rep("=", length(f.rhs.a))
 
-  f.rhs.b = as.vector(t(sweep(pars$canIMMmat,2,as.vector(netinog)*-1, "*"))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
+  f.rhs.b = as.vector(t(unname(cbind(matrix(0, nrow = nrow(pars$canIMMmat), ncol = ncol(pars$canIMMmat)-1), sweep(pars$canIMMmat,2,as.vector(netinog)*1, "*"))))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
 
-  f.con.b = diag(length(Qmat))
+  f.con.b = diag(ncol(f.con.a))
 
-  f.dir.b = rep(">=", length(Qmat))
+  f.dir.b = rep(c(rep(">=", ncol(Qmat)), rep("<=", ncol(Qmat)-1)), nrow(Qmat))
 
   # Now we need to add constraints for any potential conflict between nodes:
   if(any(colSums(pars$canIMMmat) > 1)){
+
+    stop("Not currently set up for competing immobilization.")
+
     f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = length(Qmat))
 
     te01 = which(pars$canIMMmat ==1, arr.ind = T)
@@ -125,19 +131,23 @@ foodwebode <- function(t,y,pars){
     f.rhs.b = c(f.rhs.b, f.rhs.c)
   }
 
-  f.obj = rep(0, dim(Qmat)[2]); f.obj[1] = 1; f.obj = rep(f.obj, times = dim(Qmat)[1])
+  f.obj = rep(0, dim(Qmat)[2]+dim(Qmat)[2]-1); f.obj[1] = 1; f.obj = rep(f.obj, times = dim(Qmat)[1])
 
   min_sol = lpSolve::lp(direction = "min", f.obj,
                         rbind(f.con.a, f.con.b),
                         c(f.dir.a, f.dir.b),
                         c(f.rhs.a, f.rhs.b))
 
-  mineralization = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
+  mineralization = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)
+
+  mineralization = cbind(mineralization[,1], mineralization[,-1][,1:(ncol(mineralization[,-1])/2)] - mineralization[,-1][,(1+ncol(mineralization[,-1])/2):ncol(mineralization[,-1])])
+
+
+
+  mineralization = mineralization*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
   # Calculate the mineralization rate given the change in carbon and fixed C:X ratio for all non-detritus nodes:
   mineralization2 = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
-
-  browser()
 
     # Calculate changes in inorganic pools:
   dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
