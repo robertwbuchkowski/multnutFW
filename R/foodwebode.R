@@ -58,10 +58,6 @@ foodwebode <- function(t,y,pars){
     # Respiration based on biomass:
     matrix(c(pars$ECarbon*ymat[,1], rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
 
-  # Calculate the mineralization rate given the change in carbon and fixed C:X ratio for all non-detritus nodes:
-  mineralization = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
-
-
   # Assign the inorganic nutrient pools:
   inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
 
@@ -98,24 +94,35 @@ foodwebode <- function(t,y,pars){
 
   f.dir.a = rep("=", length(f.rhs.a))
 
-  browser()
+  f.rhs.b = as.vector(t(sweep(pars$canIMMmat,2,as.vector(netinog)*-1, "*"))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
 
-  f.rhs.b = as.vector(t(sweep(pars$canIMMmat,2,as.vector(inorganicSV)*-1, "*"))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
-
-  f.con.b = expand_mat(
-    replicate(dim(Qmat)[1],
-              diag(x=1, nrow = dim(Qmat)[2], ncol = dim(Qmat)[2]),
-              simplify = F)
-  )
+  f.con.b = diag(length(Qmat))
 
   f.dir.b = rep(">=", length(Qmat))
 
   # Now we need to add constraints for any potential conflict between nodes:
-  f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = length(Qmat))
+  if(any(colSums(pars$canIMMmat) > 1)){
+    f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = length(Qmat))
 
-  te01 = which(pars$canIMMmat ==1, arr.ind = T)
-  for(te01i in nrow(te01)){
+    te01 = which(pars$canIMMmat ==1, arr.ind = T)
+    for(te01i in 1:nrow(te01)){
+      f.con.c[te01[te01i,2], (te01[te01i,1]*(dim(Qmat)[2]-1) + te01[te01i,2])] = 1
+    }
 
+
+    f.dir.c = rep(">=", dim(Qmat)[2])
+
+    f.rhs.c = as.vector(netinog)*-1
+
+    c_to_keep = which(rowSums(f.con.c)>0)
+
+    f.con.c = f.con.c[c_to_keep,]
+    f.dir.c = f.dir.c[c_to_keep]
+    f.rhs.c = f.rhs.c[c_to_keep]
+
+    f.con.b = rbind(f.con.b, f.con.c)
+    f.dir.b = c(f.dir.b, f.dir.c)
+    f.rhs.b = c(f.rhs.b, f.rhs.c)
   }
 
   f.obj = rep(0, dim(Qmat)[2]); f.obj[1] = 1; f.obj = rep(f.obj, times = dim(Qmat)[1])
@@ -125,46 +132,14 @@ foodwebode <- function(t,y,pars){
                         c(f.dir.a, f.dir.b),
                         c(f.rhs.a, f.rhs.b))
 
-  mineralization2 = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
+  mineralization = matrix(min_sol$solution, nrow = nrow(Qmat), byrow = T)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
-  # Calculate the equivalent Carbon needed for each element:
-  netwithlimiting = equivC = netwithoutmineralization
-  equivC[abs(equivC) < 1e-8] = 0 # Zero out small numbers
-  equivC = equivC*Qmat # Convert everything to carbon
-  equivC[pars$canIMMmat == 1] = NA # make this not applicable, because we don't care when they can immobilize
+  # Calculate the mineralization rate given the change in carbon and fixed C:X ratio for all non-detritus nodes:
+  mineralization2 = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
-  equivmin = apply(equivC, 1, min, na.rm = T) # Get the minimum growth rate possible.
-  equivmin = ifelse(equivmin < 0, equivmin, 0)
+  browser()
 
-  for(i in 1:dim(equivC)[1]){
-    netwithlimiting[i,1] = netwithoutmineralization[1,1] - equivmin[i]
-
-    netwithlimiting[i,] = netwithlimiting[i,1]/Qmat[i,]
-  }
-
-  # Calculate the limiting nutrient:
-  mineralization2 = mineralization
-  mineralization2[abs(mineralization2) < 1e-8] = 0
-  mineralization2[pars$canIMMmat == 1] = 1 # make this bigger than C, so that it can't be the limiting nutrient
-
-  limitingnutrient = apply(mineralization2, 1, which.min)
-
-  minlimnut = rep(NA, dim(ymat)[1])
-
-  for(i in 1:dim(ymat)[1]){
-    minlimnut[i] = netwithoutmineralization[i, limitingnutrient[i]]
-  }
-
-  # Confirm that immobilization is only happening for species for which it is possible:
-
-
-
-  if(any(mineralization2*(1- pars$canIMMmat) < 0)) stop("Immobilization is occuring in error")
-  rm(mineralization2)
-
-
-
-  # Calculate changes in inorganic pools:
+    # Calculate changes in inorganic pools:
   dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
 
   # Calculate the net changes with mineralization:
@@ -173,5 +148,5 @@ foodwebode <- function(t,y,pars){
   dy = c(netwithmineralization, dinorganic)
   names(dy) = names(y)
 
-  return(list(dy, limitingnutrient = limitingnutrient))
+  return(list(dy))
 }
