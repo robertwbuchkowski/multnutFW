@@ -106,21 +106,21 @@ foodwebode <- function(t,y,pars){
   # Now we need to add constraints for any potential conflict between nodes:
   if(any(colSums(pars$canIMMmat) > 1)){
 
-    stop("Not currently set up for competing immobilization.")
+    f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = ncol(f.con.b))
 
-    f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = length(Qmat))
+    te01 = unname(cbind(cbind(pars$canIMMmat[,1],matrix(data = 0, nrow = nrow(pars$canIMMmat), ncol = ncol(pars$canIMMmat)-1)),pars$canIMMmat[,-1]))
 
-    te01 = which(pars$canIMMmat ==1, arr.ind = T)
-    for(te01i in 1:nrow(te01)){
-      f.con.c[te01[te01i,2], (te01[te01i,1]*(dim(Qmat)[2]-1) + te01[te01i,2])] = 1
+    for(ei in ncol(pars$canIMMmat):ncol(te01)){
+      te02 = matrix(0, nrow = nrow(te01), ncol = ncol(te01))
+      te02[,ei] = te01[,ei]
+      f.con.c[(ei - ncol(pars$canIMMmat)+1),] = c(t(te02))
     }
 
+    f.dir.c = rep("<=", dim(Qmat)[2])
 
-    f.dir.c = rep(">=", dim(Qmat)[2])
+    f.rhs.c = as.vector(netinog)
 
-    f.rhs.c = as.vector(netinog)*-1
-
-    c_to_keep = which(rowSums(f.con.c)>0)
+    c_to_keep = which(rowSums(f.con.c)>1)
 
     f.con.c = f.con.c[c_to_keep,]
     f.dir.c = f.dir.c[c_to_keep]
