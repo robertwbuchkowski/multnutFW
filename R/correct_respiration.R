@@ -12,8 +12,7 @@ correct_respiration = function(usin, output_type = TRUE){
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
   species = unname(which(apply(do.call("rbind", comana(usin)$mineralization)* # This is the mineralizaiton
                                  do.call("rbind",lapply(usin$prop$general, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
-                               2, function(x) any(x < 0)) &
-                           apply(usin$imat > 0, 1, sum) > 1 # Species must have more than one food item
+                               2, function(x) any(x < 0))
   ))
 
   # Solve the new respiration rates with consumption rates:
