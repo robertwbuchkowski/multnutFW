@@ -113,6 +113,8 @@ correct_diet <- function(usin,dietlimits = c(NA)){
         warning(paste0("Diet correction removes an item from the diet of species ",sp, " called ",colnames(imat)[sp],". May get strange model behavior. Check outputs for errors in diet proportions! This code just deletes the food item and distirbutes evenly across the other food items."))
 
         usin$imat[sp,food][which(solcheck < 1e-10)] = 0
+        solcheck[solcheck <1e-10] = 0
+
         break()
 
       }else{
