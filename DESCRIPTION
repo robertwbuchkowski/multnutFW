@@ -13,7 +13,8 @@ Imports:
   quadprog (>= 1.5-8),
   lpSolve (>= 5.6.15),
   stats (>= 4.4.0),
-  stringr (>= 1.5.1)
+  stringr (>= 1.5.1),
+  diagram (>= 1.6.5)
 Depends: 
     R (>= 3.5)
 Suggests: 
