@@ -25,7 +25,7 @@ build_foodweb <- function(feeding,
   if(any(is.na(properties$Value))) stop("No values in the properties data frame can be NA")
 
   # Check that all of the properties are present:
-  if(!all(c("d","B", "Q", "DetritusRecycling", "isDetritus", "isPlant", "canIMM") %in% unique(properties$Parameter))) stop("The properties data frame must contain all of the following columns: ID, d,p,B, CN, DetritusRecycling, isDetritus, isPlant, and canIMM.")
+  if(!all(c("d","B", "Q", "FecalRecycling", "NecromassRecycling", "isDetritus", "isPlant", "canIMM") %in% unique(properties$Parameter))) stop("The properties data frame must contain all of the following columns: ID, d,p,B, CN, DetritusRecycling, isDetritus, isPlant, and canIMM.")
 
   # Check that all of the feeding relationships are listed in the properties data frame:
   if(!(all(unique(c(feeding$Predator, feeding$Prey)) %in% properties$ID))) stop("Node names listed in 'feeding' are not present in the properties data frame as listed in the ID column. All nodes in the feeding matrix must have properties.")

@@ -100,7 +100,7 @@ getPARAMS <- function(usin,
   assimilation = usin$prop$assimilation
 
   # Get detritus parameters:
-  detplant = usin$prop$general$Carbon[, c("DetritusRecycling", "isDetritus", "isPlant")]
+  detplant = usin$prop$general$Carbon[, c("FecalRecycling","NecromassRecycling", "isDetritus", "isPlant")]
 
   # Immobilization parameters:
   canIMMmat = sapply(usin$prop$general, FUN = function(X){X$canIMM})
@@ -110,7 +110,9 @@ getPARAMS <- function(usin,
     (sapply(usin$prop$general, FUN = function(X){X$p})-1)*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums))
 
   # Confirm net change:
-  if(sum(detplant$DetritusRecycling ) > 1) stop("DetritusRecycling must sum to 1")
+  if(sum(detplant$FecalRecycling ) > 1) stop("FecalRecycling must sum to 1")
+
+  if(sum(detplant$NecomassRecycling ) > 1) stop("NecromassRecycling must sum to 1")
 
   if(returnnet){
     # Gains from consumption:
@@ -123,9 +125,13 @@ getPARAMS <- function(usin,
       biomass_exrete +
 
       # Detritus recycling:
-      matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+      matrix(detplant$FecalRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
       matrix(
-        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
+        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) +  # arrange in a matrix by row so that the elements are in the columns.
+
+      matrix(detplant$NecromassRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+      matrix(
           colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")) + # A vector of carcases
           colSums(biomass_exrete), # A vector of mineralization rates also back into the detritus pool
         nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
@@ -157,9 +163,14 @@ getPARAMS <- function(usin,
       # Excretion:
       biomass_exrete +
       # Detritus recycling:
-      matrix(detplant$DetritusRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+
+      matrix(detplant$FecalRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
       matrix(
-        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)) + # A vector of unassimilated material (i.e., faeces)
+        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
+        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) +
+
+          matrix(detplant$NecromassRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+          matrix(
           colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
         nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
 
@@ -169,7 +180,7 @@ getPARAMS <- function(usin,
       print(net)
       stop("External inputs need to be greater than demand. This is probably an issue with the detritus pool for one or more elements. See the net changes above and increase inputs so that they are larger.")
     }
-    dID = which(detplant$DetritusRecycling == 1)
+    dID = which(detplant$isDetritus == 1)
     detritusloss = (externalinputs[dID,] + net[dID,])/c(usin$prop$general$Carbon$B[dID]*sweep(Qmat, 1, Qmat[, 1], "/")[dID,])
 
     return(list(yeqm = eqm_biomass,

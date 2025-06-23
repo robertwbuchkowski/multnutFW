@@ -58,12 +58,12 @@ comana <- function(usin){
 
   fmat[[1]][!is.finite(fmat[[1]])] = 0 # Replace NaN with 0 for no feeding
 
-  # Fix the detritus calculations: detritus receives dead material from all other trophic levels and so consumption is the losses minus the inputs it already gets from inefficient eating and dead biomass. This value can be negative indicating that inputs from outside the ecosystem are necessary to meet internal demand for C.
+  # Fix the detritus calculations: detritus receives dead material and fecaes from all other trophic levels and so consumption is the losses minus the inputs it already gets from inefficient eating and dead biomass. This value can be negative indicating that inputs from outside the ecosystem are necessary to meet internal demand for C.
   if(any(prop$Carbon$isDetritus >0)){
     detritusPOS = which(prop$Carbon$isDetritus >0)
 
     for(i in detritusPOS){
-      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$DetritusRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + sum(prop$Carbon$d*prop$Carbon$B))
+      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$FecalRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + prop$Carbon$NecromassRecycling[i]*sum(prop$Carbon$d*prop$Carbon$B))
     }
   }
 
