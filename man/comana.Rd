@@ -4,10 +4,12 @@
 \alias{comana}
 \title{A function to calculate carbon and nitrogen fluxes in the food web.}
 \usage{
-comana(usin)
+comana(usin, biomass_weight_preference = FALSE)
 }
 \arguments{
 \item{usin}{The community that you are analyzing: contains a matrix of interactions and a data frame of properties in a list.}
+
+\item{biomass_weight_preference}{Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.}
 }
 \value{
 A list of consumption rates, carbon mineralization, nitrogen mineralization, carbon and nitrogen consumption rates, and the modified community if zeros where removed or sorting occurred.

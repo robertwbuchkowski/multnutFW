@@ -1,12 +1,18 @@
 #' A function to calculate carbon and nitrogen fluxes in the food web.
 #'
 #' @param  usin The community that you are analyzing: contains a matrix of interactions and a data frame of properties in a list.
+#' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
 #' @return A list of consumption rates, carbon mineralization, nitrogen mineralization, carbon and nitrogen consumption rates, and the modified community if zeros where removed or sorting occurred.
 #' @examples
 #' comana(intro_comm)
 #' @export
 
-comana <- function(usin){
+comana <- function(usin, biomass_weight_preference = FALSE){
+
+  # Weight preferences if needed:
+  if(biomass_weight_preference){
+    usin = biomass_weight_preferences(usin)
+  }
 
   # Separate the imat and prop:
   imat = usin$imat # row values of imat sets predator feeding preferences!
@@ -14,9 +20,8 @@ comana <- function(usin){
   assim = usin$prop$assimilation # the assimilation efficiencies
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
-  # Calculate the preference matrix using biomass re-scaling:
-  temp_mat =
-    -1*t(imat)*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes)/matrix(rowSums(imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow = T)), nrow = Nnodes, ncol = Nnodes, byrow = T)
+  # Input the preference matrix:
+  temp_mat = -1*t(imat)
 
   temp_mat[!is.finite(temp_mat)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 
@@ -54,7 +59,7 @@ comana <- function(usin){
   mineralization = fmat
 
   # Create a new matrix for feeding rates with the same dimensions as the food web matrix
-  fmat[[1]] = (imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow=TRUE)/rowSums(imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow=TRUE)))*consumption
+  fmat[[1]] = imat*consumption
 
   fmat[[1]][!is.finite(fmat[[1]])] = 0 # Replace NaN with 0 for no feeding
 
@@ -111,5 +116,5 @@ comana <- function(usin){
       as.numeric(rowSums(imat)>0) # Make X mineralization zero for all nodes without prey items.
   }
 
-  return(list(fmat = fmat, consumption = consumption, AIJ = AIJ, mineralization = mineralization, preferences = preference_matrix))
+  return(list(fmat = fmat, consumption = consumption, AIJ = AIJ, mineralization = mineralization))
 }

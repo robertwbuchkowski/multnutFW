@@ -4,12 +4,18 @@
 \alias{correct_respiration}
 \title{A function to reduce growth by increasing respiration.}
 \usage{
-correct_respiration(usin, output_type = TRUE)
+correct_respiration(
+  usin,
+  output_type = TRUE,
+  biomass_weight_preference = FALSE
+)
 }
 \arguments{
 \item{usin}{The input community.}
 
 \item{output_type}{Should the nutrient limitation be printed (TRUE) or included in the output as a second object (FALSE)?}
+
+\item{biomass_weight_preference}{Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.}
 }
 \value{
 The modified community with a higher respiration rate.

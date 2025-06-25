@@ -1,13 +1,21 @@
 #' A function to correct the diet of trophic species.
 #'
+#' This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to its relative abundance as possible while aquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but the function will always adjust diet based on available biomass.
+#'
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
+#' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
 #' @return The modified community with new diet preferences.
 #' @examples
 #' # Basic example with introductory community
 #' correct_diet(intro_comm)
 #' @export
-correct_diet <- function(usin,dietlimits = c(NA)){
+correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FALSE){
+
+  # Weight preferences if needed:
+  if(biomass_weight_preference){
+    usin = biomass_weight_preferences(usin)
+  }
 
   # Setting up and verifying diet limits
   if(any(is.na(dietlimits))){
@@ -122,14 +130,9 @@ correct_diet <- function(usin,dietlimits = c(NA)){
       }
     }
 
-    FLIST = solcheck
-    FLIST1 = FLIST/biomass
-    FLIST1 = min(FLIST1[FLIST1 > 0])
-    FLIST2 = (FLIST/biomass)/FLIST1
+    usin$imat[sp,food] = solcheck
 
-    usin$imat[sp,food] = FLIST2
-
-    if(sum((comana(usin)$fmat$Carbon[sp,food]/(comana(usin)$consumption[[sp]]) - FLIST)^2) > 1e-10) stop("Check quadratic optimization. There is an issue.")
+    if(sum((comana(usin)$fmat$Carbon[sp,food]/(comana(usin)$consumption[[sp]]) - solcheck)^2) > 1e-10) stop("Check quadratic optimization. There is an issue.")
 
   }
 

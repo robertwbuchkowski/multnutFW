@@ -28,7 +28,7 @@ node_flux_view <- function(usin, node = NULL, Element= NULL, mfrow_plot = c(1,1)
 
   death = usin$prop$general$Carbon$d*usin$prop$general$Carbon$B
 
-  ratio = lapply(intro_comm$prop$general, function(X) X$Q)
+  ratio = lapply(usin$prop$general, function(X) X$Q)
 
   ratio = lapply(ratio, function(X) X/X[[1]])
 

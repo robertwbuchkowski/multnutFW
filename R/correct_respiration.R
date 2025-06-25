@@ -2,9 +2,15 @@
 #'
 #' @param usin The input community.
 #' @param output_type Should the nutrient limitation be printed (TRUE) or included in the output as a second object (FALSE)?
+#' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
 #' @return The modified community with a higher respiration rate.
 #' @export
-correct_respiration = function(usin, output_type = TRUE){
+correct_respiration = function(usin, output_type = TRUE, biomass_weight_preference = FALSE){
+
+  # Weight preferences if needed:
+  if(biomass_weight_preference){
+    usin = biomass_weight_preferences(usin)
+  }
 
   # Produce a vector to print/output the nutrient limitation of each organism:
   nutlim <- rep(NA, dim(usin$imat)[1])
@@ -24,13 +30,12 @@ correct_respiration = function(usin, output_type = TRUE){
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
   # Create a vector for the consumption rates
-  temp_mat =
-    -1*t(imat)*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes)/matrix(rowSums(imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow = T)), nrow = Nnodes, ncol = Nnodes, byrow = T)
+  temp_mat = -1*t(imat)
 
   temp_mat[!is.finite(temp_mat)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 
   # Prepare feeding options for code below:
-  temp_mat2 = imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow = T)/t(matrix(rowSums(imat*matrix(prop$Carbon$B, nrow = Nnodes, ncol = Nnodes, byrow = T)), nrow = Nnodes, ncol = Nnodes, byrow = T))
+  temp_mat2 = imat
 
   temp_mat2[!is.finite(temp_mat2)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 

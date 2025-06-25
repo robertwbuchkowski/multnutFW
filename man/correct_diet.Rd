@@ -4,18 +4,20 @@
 \alias{correct_diet}
 \title{A function to correct the diet of trophic species.}
 \usage{
-correct_diet(usin, dietlimits = c(NA))
+correct_diet(usin, dietlimits = c(NA), biomass_weight_preference = FALSE)
 }
 \arguments{
 \item{usin}{The input community in which to fix the diets.}
 
 \item{dietlimits}{# A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.}
+
+\item{biomass_weight_preference}{Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.}
 }
 \value{
 The modified community with new diet preferences.
 }
 \description{
-A function to correct the diet of trophic species.
+This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to its relative abundance as possible while aquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but the function will always adjust diet based on available biomass.
 }
 \examples{
 # Basic example with introductory community
