@@ -1,6 +1,6 @@
 #' A function to correct the diet of trophic species.
 #'
-#' This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to its relative abundance as possible while aquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but the function will always adjust diet based on available biomass.
+#' This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to the starting feeding preferences as possible while acquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but can be if biomass weighted preference is desired.
 #'
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
@@ -78,7 +78,7 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
 
       try(
         sol1 <- quadprog::solve.QP(Dmat = diag(numfood), # We need the squared terms for each diet, use the identity matrix to get them f^T I f
-                                   dvec = biomass/sum(biomass), # The diet is as close to the relative abundance as possible
+                                   dvec = imat[sp,food], # The diet is as close to the starting feeding preferences as possible.
                                    Amat = AMAT, # proportions sum to 1, Mineralization is zero, and none of the limits are exceeded
                                    bvec = BVEC, # proportions sum to 1, Mineralization is zero, and none of the limits are exceeded, and all values greater than zero
                                    meq = 1 # first position in Amat is an equality constraint)

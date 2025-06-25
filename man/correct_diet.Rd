@@ -17,7 +17,7 @@ correct_diet(usin, dietlimits = c(NA), biomass_weight_preference = FALSE)
 The modified community with new diet preferences.
 }
 \description{
-This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to its relative abundance as possible while aquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but the function will always adjust diet based on available biomass.
+This function corrects the diet of the trophic species to balance available nutrients. It assumes that the organism's goal is to eat food as close to the starting feeding preferences as possible while acquiring the necessary nutrients. The input community should have a preference matrix with the baseline preferences. This need not be weighted by biomass, but can be if biomass weighted preference is desired.
 }
 \examples{
 # Basic example with introductory community
