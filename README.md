@@ -27,17 +27,20 @@ This is a basic example analyzing the introductory food web:
 ``` r
 library(multnutFW)
 
+# Decide if you want to correct the feeding preferences based on the biomass proportions:
+intro_comm = biomass_weight_preferences(intro_comm)
+
 # Run the food web analysis of the introductory community:
 intro_analysis = comana(intro_comm)
 
 # The analysis is run on the food web included in the package with this feeding matrix:
 intro_comm$imat
-#>          Pred Prey1 Prey2 Microbe1 Detritus
-#> Pred        0     1   1.2        0        0
-#> Prey1       0     0   1.0        0        1
-#> Prey2       0     0   0.0        1        1
-#> Microbe1    0     0   0.0        0        1
-#> Detritus    0     0   0.0        0        0
+#>          Pred     Prey1      Prey2  Microbe1  Detritus
+#> Pred        0 0.5714286 0.42857143 0.0000000 0.0000000
+#> Prey1       0 0.0000000 0.04761905 0.0000000 0.9523810
+#> Prey2       0 0.0000000 0.00000000 0.1666667 0.8333333
+#> Microbe1    0 0.0000000 0.00000000 0.0000000 1.0000000
+#> Detritus    0 0.0000000 0.00000000 0.0000000 0.0000000
 
 # The introductory community has 4 chemical elements:
 names(intro_comm$prop)
@@ -104,12 +107,12 @@ nutrient rich food. Notice the changes in feeding preferences.
 intro_comm_diet = correct_diet(intro_comm)
 
 intro_comm_diet$imat
-#>          Pred    Prey1   Prey2 Microbe1 Detritus
-#> Pred        0 2.041667   1.000 0.000000        0
-#> Prey1       0 0.000000 209.886 0.000000        1
-#> Prey2       0 0.000000   0.000 5.376607        1
-#> Microbe1    0 0.000000   0.000 0.000000        1
-#> Detritus    0 0.000000   0.000 0.000000        0
+#>          Pred    Prey1     Prey2  Microbe1   Detritus
+#> Pred        0 0.765625 0.2343750 0.0000000 0.00000000
+#> Prey1       0 0.000000 0.9130003 0.0000000 0.08699965
+#> Prey2       0 0.000000 0.0000000 0.5181469 0.48185310
+#> Microbe1    0 0.000000 0.0000000 0.0000000 1.00000000
+#> Detritus    0 0.000000 0.0000000 0.0000000 0.00000000
 ```
 
 The other option is to correct respiration by increasing the overflow
@@ -135,18 +138,18 @@ intro_comm_resp = correct_respiration(intro_comm)
 
 # Look at the new values for overflow respiration:
 intro_comm_resp$prop$general$Carbon
-#>          ID    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant p
-#> 1      Pred 0.20 0.5      0 1.0   0.1                 0          0       0 1
-#> 4     Prey1 0.10 0.5      0 3.0   8.0                 0          0       0 1
-#> 7     Prey2 0.05 0.5      0 0.5   5.0                 0          0       0 1
-#> 10 Microbe1 0.05 0.5      0 0.2  20.0                 0          0       0 1
-#> 13 Detritus 0.00 0.5      0 0.0 100.0                 1          1       0 1
-#>          Ehat
-#> 1  0.05097656
-#> 4  7.07486328
-#> 7  1.17282366
-#> 10 0.00000000
-#> 13 0.00000000
+#>          ID    E   Q canIMM   d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0.20 0.5      0 1.0   0.1          0       0              0
+#> 4     Prey1 0.10 0.5      0 3.0   8.0          0       0              0
+#> 7     Prey2 0.05 0.5      0 0.5   5.0          0       0              0
+#> 10 Microbe1 0.05 0.5      0 0.2  20.0          0       0              0
+#> 13 Detritus 0.00 0.5      0 0.0 100.0          1       0              1
+#>    NecromassRecycling p       Ehat
+#> 1                   0 1 0.05097656
+#> 4                   0 1 7.07486328
+#> 7                   0 1 1.17282366
+#> 10                  0 1 0.00000000
+#> 13                  1 1 0.00000000
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -173,13 +176,61 @@ whomineralizes(intro_comm_resp)
 #> 11     Pred Phosphorus  0.0000000000  8.204783e-04
 #> 12    Prey1 Phosphorus  0.7911450285  5.159710e-02
 #> 13    Prey2 Phosphorus  0.1975820508 -1.791033e-04
-#> 14 Microbe1 Phosphorus  0.0112729208  0.000000e+00
+#> 14 Microbe1 Phosphorus  0.0112729208 -1.564432e-16
 #> 15 Detritus Phosphorus  0.0000000000 -1.035934e+00
 #> 16     Pred    Calcium  0.0008248540  8.500475e-04
 #> 17    Prey1    Calcium  0.7920566037  5.113900e-02
 #> 18    Prey2    Calcium  0.1959393451 -1.830728e-04
 #> 19 Microbe1    Calcium  0.0111791972 -1.379045e-16
 #> 20 Detritus    Calcium  0.0000000000 -1.027322e+00
+```
+
+### Modifying respiration parameters
+
+The model contains respiration parameters that either take respiration
+as a function of biomass $E$ or as a function of consumption rate $p$.
+The package contains functions to switch between these two parameters
+during the calculations in $comana$. At equilibrium, the difference does
+not matter, but it is important when simulating the food web.
+
+``` r
+
+# Take the introdutory community and switch respiration by E to p.
+temp_comm = E_to_p(intro_comm)
+
+temp_comm$prop$general$Carbon
+#>          ID E   Q canIMM   d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0 0.5      0 1.0   0.1          0       0              0
+#> 4     Prey1 0 0.5      0 3.0   8.0          0       0              0
+#> 7     Prey2 0 0.5      0 0.5   5.0          0       0              0
+#> 10 Microbe1 0 0.5      0 0.2  20.0          0       0              0
+#> 13 Detritus 0 0.5      0 0.0 100.0          1       0              1
+#>    NecromassRecycling         p Ehat
+#> 1                   0 0.8333333    0
+#> 4                   0 0.9678875    0
+#> 7                   0 0.9463450    0
+#> 10                  0 0.8513166    0
+#> 13                  1 1.0000000    0
+
+# Switch back
+temp_comm = p_to_E(temp_comm)
+
+temp_comm$prop$general$Carbon
+#>          ID    E   Q canIMM   d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0.20 0.5      0 1.0   0.1          0       0              0
+#> 4     Prey1 0.10 0.5      0 3.0   8.0          0       0              0
+#> 7     Prey2 0.05 0.5      0 0.5   5.0          0       0              0
+#> 10 Microbe1 0.05 0.5      0 0.2  20.0          0       0              0
+#> 13 Detritus 0.00 0.5      0 0.0 100.0          1       0              1
+#>    NecromassRecycling p Ehat
+#> 1                   0 1    0
+#> 4                   0 1    0
+#> 7                   0 1    0
+#> 10                  0 1    0
+#> 13                  1 1    0
+
+# Clean up environment
+rm(temp_comm)
 ```
 
 ### Using your own food web
@@ -239,24 +290,25 @@ str(yourfoodweb)
 #>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 #>  $ prop:List of 2
 #>   ..$ general     :List of 4
-#>   .. ..$ Carbon    :'data.frame':    5 obs. of  11 variables:
-#>   .. .. ..$ ID               : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. ..$ E                : num [1:5] 0.2 0.1 0.05 0.05 0
-#>   .. .. ..$ Q                : num [1:5] 0.5 0.5 0.5 0.5 0.5
-#>   .. .. ..$ canIMM           : num [1:5] 0 0 0 0 0
-#>   .. .. ..$ d                : num [1:5] 1 3 0.5 0.2 0
-#>   .. .. ..$ B                : num [1:5] 0.1 8 5 20 100
-#>   .. .. ..$ DetritusRecycling: num [1:5] 0 0 0 0 1
-#>   .. .. ..$ isDetritus       : num [1:5] 0 0 0 0 1
-#>   .. .. ..$ isPlant          : num [1:5] 0 0 0 0 0
-#>   .. .. ..$ p                : num [1:5] 1 1 1 1 1
-#>   .. .. ..$ Ehat             : num [1:5] 0 0 0 0 0
+#>   .. ..$ Carbon    :'data.frame':    5 obs. of  12 variables:
+#>   .. .. ..$ ID                : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ E                 : num [1:5] 0.2 0.1 0.05 0.05 0
+#>   .. .. ..$ Q                 : num [1:5] 0.5 0.5 0.5 0.5 0.5
+#>   .. .. ..$ canIMM            : num [1:5] 0 0 0 0 0
+#>   .. .. ..$ d                 : num [1:5] 1 3 0.5 0.2 0
+#>   .. .. ..$ B                 : num [1:5] 0.1 8 5 20 100
+#>   .. .. ..$ isDetritus        : num [1:5] 0 0 0 0 1
+#>   .. .. ..$ isPlant           : num [1:5] 0 0 0 0 0
+#>   .. .. ..$ FecalRecycling    : num [1:5] 0 0 0 0 1
+#>   .. .. ..$ NecromassRecycling: num [1:5] 0 0 0 0 1
+#>   .. .. ..$ p                 : num [1:5] 1 1 1 1 1
+#>   .. .. ..$ Ehat              : num [1:5] 0 0 0 0 0
 #>   .. .. ..- attr(*, "reshapeWide")=List of 5
 #>   .. .. .. ..$ v.names: NULL
 #>   .. .. .. ..$ timevar: chr "Parameter"
 #>   .. .. .. ..$ idvar  : chr "ID"
-#>   .. .. .. ..$ times  : chr [1:10] "E" "Q" "canIMM" "d" ...
-#>   .. .. .. ..$ varying: chr [1, 1:10] "Value.E" "Value.Q" "Value.canIMM" "Value.d" ...
+#>   .. .. .. ..$ times  : chr [1:11] "E" "Q" "canIMM" "d" ...
+#>   .. .. .. ..$ varying: chr [1, 1:11] "Value.E" "Value.Q" "Value.canIMM" "Value.d" ...
 #>   .. ..$ Nitrogen  :'data.frame':    5 obs. of  5 variables:
 #>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
 #>   .. .. ..$ Q     : num [1:5] 0.111 0.104 0.1 0.1 0.025
@@ -316,51 +368,3 @@ The function creates an interaction matrix and also breaks out the
 assimilation efficiency and properties by element into the appropriate
 matrices for the package. If you look at the structure of this
 community, you can see how to build it manually using lists.
-
-### Modifying respiration parameters
-
-The model contains respiration parameters that either take respiration
-as a function of biomass $E$ or as a function of consumption rate $p$.
-The package contains functions to switch between these two parameters
-during the calculations in $comana$. At equilibrium, the difference does
-not matter, but it is important when simulating the food web.
-
-``` r
-
-# Take the introdutory community and switch respiration by E to p.
-temp_comm = E_to_p(intro_comm)
-
-temp_comm$prop$general$Carbon
-#>          ID E   Q canIMM   d     B DetritusRecycling isDetritus isPlant
-#> 1      Pred 0 0.5      0 1.0   0.1                 0          0       0
-#> 4     Prey1 0 0.5      0 3.0   8.0                 0          0       0
-#> 7     Prey2 0 0.5      0 0.5   5.0                 0          0       0
-#> 10 Microbe1 0 0.5      0 0.2  20.0                 0          0       0
-#> 13 Detritus 0 0.5      0 0.0 100.0                 1          1       0
-#>            p Ehat
-#> 1  0.8333333    0
-#> 4  0.9678875    0
-#> 7  0.9463450    0
-#> 10 0.8513166    0
-#> 13 1.0000000    0
-
-# Switch back
-temp_comm = p_to_E(temp_comm)
-
-temp_comm$prop$general$Carbon
-#>          ID    E   Q canIMM   d     B DetritusRecycling isDetritus isPlant p
-#> 1      Pred 0.20 0.5      0 1.0   0.1                 0          0       0 1
-#> 4     Prey1 0.10 0.5      0 3.0   8.0                 0          0       0 1
-#> 7     Prey2 0.05 0.5      0 0.5   5.0                 0          0       0 1
-#> 10 Microbe1 0.05 0.5      0 0.2  20.0                 0          0       0 1
-#> 13 Detritus 0.00 0.5      0 0.0 100.0                 1          1       0 1
-#>    Ehat
-#> 1     0
-#> 4     0
-#> 7     0
-#> 10    0
-#> 13    0
-
-# Clean up environment
-rm(temp_comm)
-```
