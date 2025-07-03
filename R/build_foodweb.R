@@ -41,16 +41,54 @@ build_foodweb <- function(feeding,
     feedingmatrix[feeding$Predator[i],feeding$Prey[i]] = feeding$Preference[i]
   }
 
-  # Add in perfect production efficiency if p is not listed in the data frame:
-  if(!any(properties$Parameter == "p")){
-    tdf = unique(properties[,c("ID", "Element")])
+  # # Add in perfect production efficiency if p is not listed in the data frame:
+  # if(!any(properties$Parameter == "p")){
+  #   tdf = unique(properties[,c("ID", "Element")])
+  #
+  #   tdf[,c("Parameter")] = c("p")
+  #   tdf[,c("Value")] = c(1)
+  #
+  #   properties = rbind(properties, tdf)
+  #   rm(tdf)
+  # }
 
-    tdf[,c("Parameter")] = c("p")
-    tdf[,c("Value")] = c(1)
+  # Get unique combinations of ID and Element
+  unique_combos <- unique(properties[c("ID", "Element")])
 
-    properties = rbind(properties, tdf)
-    rm(tdf)
+  # Initialize a list to store new rows
+  new_rows <- list()
+
+  for (i in seq_len(nrow(unique_combos))) {
+    id <- unique_combos$ID[i]
+    element <- unique_combos$Element[i]
+
+    # Subset for this ID and Element
+    subset_rows <- properties[properties$ID == id & properties$Element == element, ]
+    params <- subset_rows$Parameter
+
+    has_E <- "E" %in% params
+    has_p <- "p" %in% params
+
+    if (!has_E && !has_p && element == "Carbon") {
+      stop(paste("Error: Combination ID =", id, "and Element =", element, "is missing both 'E' and 'p'."))
+    }
+
+    if (!has_E && has_p && element == "Carbon") {
+      new_rows[[length(new_rows) + 1]] <- data.frame(ID = id, Element = element, Parameter = "E", Value = 0)
+    }
+
+    if (!has_p) {
+      new_rows[[length(new_rows) + 1]] <- data.frame(ID = id, Element = element, Parameter = "p", Value = 1)
+    }
   }
+
+  # Combine original data with new rows if any
+  if (length(new_rows) > 0) {
+    new_data <- do.call(rbind, new_rows)
+    properties <- rbind(properties, new_data)
+  }
+
+
 
   # Add in a minimum of zero respiration if E is not listed in the data frame:
   if(!any(properties$Parameter == "Emin")){
