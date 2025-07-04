@@ -249,8 +249,8 @@ removenodes <- function(COMM, toremove){
   for(ii in 1:length(COMM$prop$general)){
     COMM$prop$general[[ii]] = subset(COMM$prop$general[[ii]], !(COMM$prop$general[[ii]]$ID %in% toremove))
 
-    stopifnot(all(COMM$prop$general[[ii]]$ID == rownames(COMM$imat)))
-    stopifnot(all(COMM$prop$general[[ii]]$ID == colnames(COMM$imat)))
+    stopifnot(all(sort(COMM$prop$general[[ii]]$ID) == sort(rownames(COMM$imat))))
+    stopifnot(all(sort(COMM$prop$general[[ii]]$ID) == sort(colnames(COMM$imat))))
 
     COMM$prop$assimilation[[ii]] = COMM$prop$assimilation[[ii]][whichtorm,whichtorm]
 
