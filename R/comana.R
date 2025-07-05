@@ -20,6 +20,15 @@ comana <- function(usin, biomass_weight_preference = FALSE){
   assim = usin$prop$assimilation # the assimilation efficiencies
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
+  # Confirm that all rows of imat sum to 1:
+  if(!all(rowSums(imat) %in% c(0,1))){
+    warning("All rows of imat must sum to 1 or 0, so feeding preferences are being rescaled.")
+
+    imat = sweep(imat, 1, rowSums(imat), FUN = "/")
+    imat[!is.finite(imat)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
+
+  }
+
   # Input the preference matrix:
   temp_mat = -1*t(imat)
 
