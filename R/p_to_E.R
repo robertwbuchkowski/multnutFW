@@ -15,7 +15,7 @@ p_to_E <- function(usin){
   usin$prop$general$Carbon$p = 1
 
   # Solve for p by rearranging the carbon equation for each species:
-  Eout = (usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*coutput$fmat$Carbon) -  usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B - colSums(coutput$fmat$Carbon))/usin$prop$general$Carbon$B
+  Eout = (usin$prop$general$Carbon$p*usin$prop$general$Carbon$assimhat*rowSums(usin$prop$assimilation$Carbon*coutput$fmat$Carbon) -  usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B - colSums(coutput$fmat$Carbon))/usin$prop$general$Carbon$B
 
   # No respiration for detritus:
   Eout = ifelse(usin$prop$general$Carbon$isDetritus == 1, 0, Eout)

@@ -41,16 +41,9 @@ build_foodweb <- function(feeding,
     feedingmatrix[feeding$Predator[i],feeding$Prey[i]] = feeding$Preference[i]
   }
 
-  # # Add in perfect production efficiency if p is not listed in the data frame:
-  # if(!any(properties$Parameter == "p")){
-  #   tdf = unique(properties[,c("ID", "Element")])
-  #
-  #   tdf[,c("Parameter")] = c("p")
-  #   tdf[,c("Value")] = c(1)
-  #
-  #   properties = rbind(properties, tdf)
-  #   rm(tdf)
-  # }
+  # Standardize the feeding preferences:
+  feedingmatrix = sweep(feedingmatrix, 1, rowSums(feedingmatrix), FUN = "/")
+  feedingmatrix[!is.finite(feedingmatrix)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
 
   # Get unique combinations of ID and Element
   unique_combos <- unique(properties[c("ID", "Element")])
@@ -111,6 +104,19 @@ build_foodweb <- function(feeding,
 
     tdf[,c("Parameter")] = c("Ehat")
     tdf[,c("Value")] = c(0)
+
+    properties = rbind(properties, tdf)
+    rm(tdf)
+  }
+
+  # Add in an reduced assimilation efficiency term if it is not listed in the data frame:
+  if(!any(properties$Parameter == "assimhat")){
+    tdf = unique(properties[,c("ID", "Element")])
+
+    tdf = subset(tdf, tdf$Element == "Carbon")
+
+    tdf[,c("Parameter")] = c("assimhat")
+    tdf[,c("Value")] = c(1)
 
     properties = rbind(properties, tdf)
     rm(tdf)

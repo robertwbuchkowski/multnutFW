@@ -44,7 +44,7 @@ comana <- function(usin, biomass_weight_preference = FALSE){
   assimpref[assimpref == 0] = 1
 
   # Create a vector for the consumption rates
-  diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
+  diag(temp_mat) = prop$Carbon$p*prop$Carbon$assimhat*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
   consumption = base::solve(temp_mat,(prop$Carbon$d*prop$Carbon$B + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B))
 
@@ -77,7 +77,7 @@ comana <- function(usin, biomass_weight_preference = FALSE){
     detritusPOS = which(prop$Carbon$isDetritus >0)
 
     for(i in detritusPOS){
-      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$FecalRecycling[i]*(sum((1-assim$Carbon)*fmat[[1]]) + prop$Carbon$NecromassRecycling[i]*sum(prop$Carbon$d*prop$Carbon$B))
+      consumption[i] = sum(fmat[[1]][,i]) - prop$Carbon$FecalRecycling[i]*(sum((1-(prop$Carbon$assimhat*assim$Carbon))*fmat[[1]]) + prop$Carbon$NecromassRecycling[i]*sum(prop$Carbon$d*prop$Carbon$B))
     }
   }
 
@@ -103,11 +103,11 @@ comana <- function(usin, biomass_weight_preference = FALSE){
       current_element_assimilation*
                   matrix(current_element_properties$p, nrow = Nnodes, ncol = Nnodes)/ # Predator X assimilation and production rates
                   matrix(Qhat, nrow = Nnodes, ncol = Nnodes, byrow = T) - # Prey C:X ratio
-                  assim$Carbon*matrix(prop$Carbon$p, nrow = Nnodes, ncol = Nnodes) # Predator C assimilation and production rates
+                  assim$Carbon*matrix(prop$Carbon$p*prop$Carbon$assimhat, nrow = Nnodes, ncol = Nnodes) # Predator C assimilation and production rates
   }
 
   # Calculate carbon mineralization using the production efficiency
-  mineralization[[1]] = (1-prop$Carbon$p)*rowSums(assim$Carbon*fmat$Carbon) + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B
+  mineralization[[1]] = (1-prop$Carbon$p)*prop$Carbon$assimhat*rowSums(assim$Carbon*fmat$Carbon) + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B
 
   # Calculate the mineralization rates of the various elements using the comparison to carbon:
 

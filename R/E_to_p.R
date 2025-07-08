@@ -15,7 +15,7 @@ E_to_p <- function(usin){
   usin$prop$general$Carbon$E = 0
 
   # Solve for p by rearranging the carbon equation for each species:
-  pout = (usin$prop$general$Carbon$d*usin$prop$general$Carbon$B + usin$prop$general$Carbon$E*usin$prop$general$Carbon$B + usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B + colSums(coutput$fmat$Carbon))/rowSums(usin$prop$assimilation$Carbon*coutput$fmat$Carbon)
+  pout = (usin$prop$general$Carbon$d*usin$prop$general$Carbon$B + usin$prop$general$Carbon$E*usin$prop$general$Carbon$B + usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B + colSums(coutput$fmat$Carbon))/(usin$prop$general$Carbon$assimhat*rowSums(usin$prop$assimilation$Carbon*coutput$fmat$Carbon))
 
   # Remove infinity that occurs for nodes without food sources:
   pout = ifelse(is.infinite(pout), 1,pout)

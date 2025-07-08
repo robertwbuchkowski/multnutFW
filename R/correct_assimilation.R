@@ -3,9 +3,9 @@
 #' @param usin The input community.
 #' @param output_type Should the nutrient limitation be printed (TRUE) or included in the output as a second object (FALSE)?
 #' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
-#' @return The modified community with a higher respiration rate.
+#' @return The modified community with a lower carbon assimilation efficiency when necessary.
 #' @export
-correct_respiration = function(usin, output_type = TRUE, biomass_weight_preference = FALSE){
+correct_assimilation = function(usin, output_type = TRUE, biomass_weight_preference = FALSE){
 
   # Weight preferences if needed:
   if(biomass_weight_preference){
@@ -49,7 +49,7 @@ correct_respiration = function(usin, output_type = TRUE, biomass_weight_preferen
   assimpref[assimpref == 0] = 1
 
   # Create a vector for the consumption rates
-  diag(temp_mat) = prop$Carbon$p*prop$Carbon$assimhat*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
+  diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
   # Correct columns to correct respiration:
   temp_mat3 = matrix(0, nrow = Nnodes, ncol = length(species))
@@ -78,14 +78,13 @@ correct_respiration = function(usin, output_type = TRUE, biomass_weight_preferen
     temp_mat3[sp,which(species == sp)] = -prop$Carbon$B[sp]
   }
 
-
   # Combine to form the matrix Ahat:
 
   temp_mat = rbind(temp_mat, temp_mat5[species,])
 
   temp_mat = cbind(temp_mat, rbind(temp_mat3, temp_mat4))
 
-  bvec = c(prop$Carbon$d*prop$Carbon$B + prop$Carbon$E*prop$Carbon$B, -prop$Carbon$E[species]*prop$Carbon$B[species])
+  bvec = c(prop$Carbon$d*prop$Carbon$B + prop$Carbon$E*prop$Carbon$B + prop$Carbon$Ehat*prop$Carbon$B, -prop$Carbon$E[species]*prop$Carbon$B[species])
 
   solution = base::solve(temp_mat,bvec)
 
@@ -96,16 +95,25 @@ correct_respiration = function(usin, output_type = TRUE, biomass_weight_preferen
 
   nutlim[is.na(nutlim)] = "Carbon"
 
-  if(is.null(usin$prop$general$Carbon$Ehat)){
-    Ehat = rep(0, Nnodes)
-    warning("Adding Ehat to the community.")
-  }else{
-    Ehat = usin$prop$general$Carbon$Ehat
+  # Up this this point it is the same as correct_respiration, because we are solving for the same overflow carbon. The difference going forward is that we assign it to unassimilated pool instead of the respired pool.
+
+  assimhattemp = rep(0, Nnodes)
+
+  assimhattemp[species] = solution[c((Nnodes+1) : (Nnodes + length(species)))]
+
+  consumout = imat*solution[1:Nnodes]
+
+  assimhattemp2 = (usin$prop$general$Carbon$d*usin$prop$general$Carbon$B + usin$prop$general$Carbon$E*usin$prop$general$Carbon$B + usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B + colSums(consumout))/(usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*consumout))
+
+  assimhattemp2[!is.finite(assimhattemp2)] = 1
+
+
+  if(is.null(usin$prop$general$Carbon$assimhat)){
+    usin$prop$general$Carbon$assimhat = 1
+    warning("Adding assimhat to the community.")
   }
 
-  Ehat[species] = solution[c((Nnodes+1) : (Nnodes + length(species)))]
-
-  usin$prop$general$Carbon$Ehat = Ehat
+  usin$prop$general$Carbon$assimhat[species] = assimhattemp2[species]
 
   if(output_type){
     print(data.frame(ID = colnames(usin$imat),
