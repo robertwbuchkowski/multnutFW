@@ -122,6 +122,9 @@ correct_assimilation = function(usin, output_type = TRUE, biomass_weight_prefere
                      `Limiting_nutrient` = nutlim))
     return(usin)
   }else{
-    return(list(usin,output_type))
+    limitation = data.frame(ID = colnames(usin$imat),
+                            `Limiting_nutrient` = nutlim)
+
+    return(list(usin,limitation))
   }
 }
