@@ -107,13 +107,15 @@ correct_assimilation = function(usin, output_type = TRUE, biomass_weight_prefere
 
   assimhattemp2[!is.finite(assimhattemp2)] = 1
 
+  assimhat = rep(1, Nnodes)
 
-  if(is.null(usin$prop$general$Carbon$assimhat)){
-    usin$prop$general$Carbon$assimhat = 1
-    warning("Adding assimhat to the community.")
-  }
+  assimhat[species] = assimhattemp2[species]
 
-  usin$prop$general$Carbon$assimhat[species] = assimhattemp2[species]
+  # Add in the new assimilation rates:
+  usin$prop$assimilation$Carbon = assimhat*usin$prop$assimilation$Carbon
+
+  # Reset to one:
+  usin$prop$assimilation$Carbon[usin$imat == 0] = 1
 
   if(output_type){
     print(data.frame(ID = colnames(usin$imat),

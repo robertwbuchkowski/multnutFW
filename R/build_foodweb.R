@@ -109,19 +109,6 @@ build_foodweb <- function(feeding,
     rm(tdf)
   }
 
-  # Add in an reduced assimilation efficiency term if it is not listed in the data frame:
-  if(!any(properties$Parameter == "assimhat")){
-    tdf = unique(properties[,c("ID", "Element")])
-
-    tdf = subset(tdf, tdf$Element == "Carbon")
-
-    tdf[,c("Parameter")] = c("assimhat")
-    tdf[,c("Value")] = c(1)
-
-    properties = rbind(properties, tdf)
-    rm(tdf)
-  }
-
   Nnodes = dim(feedingmatrix)[1] # Number of nodes in the food web
 
   # Break out the elements into a properties list for easier processing:

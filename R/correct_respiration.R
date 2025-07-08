@@ -49,7 +49,7 @@ correct_respiration = function(usin, output_type = TRUE, biomass_weight_preferen
   assimpref[assimpref == 0] = 1
 
   # Create a vector for the consumption rates
-  diag(temp_mat) = prop$Carbon$p*prop$Carbon$assimhat*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
+  diag(temp_mat) = prop$Carbon$p*assimpref + diag(temp_mat) # Add in production and assimilation efficiency terms on the diagonal.
 
   # Correct columns to correct respiration:
   temp_mat3 = matrix(0, nrow = Nnodes, ncol = length(species))

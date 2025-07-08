@@ -20,11 +20,7 @@ node_flux_view <- function(usin, node = NULL, Element= NULL, mfrow_plot = c(1,1)
   # Get the node inputs in C,N,P:
   consump = lapply(coutput$fmat, rowSums)
 
-  addassim = usin$prop$assimilation
-
-  addassim$Carbon = usin$prop$general$Carbon$assimhat*addassim$Carbon
-
-  defication = Map(function(x, y) rowSums(x * (1-y)), coutput$fmat, addassim)
+  defication = Map(function(x, y) rowSums(x * (1-y)), coutput$fmat, usin$prop$assimilation)
 
   predation = lapply(coutput$fmat, colSums)
 
