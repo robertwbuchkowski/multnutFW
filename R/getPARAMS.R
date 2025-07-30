@@ -6,7 +6,7 @@
 #' @param Conly Boolean: Is the model meant for carbon only?
 #' @param densitydependence Which nodes have density dependence? NA default means none of them do. Should be a vector of 0 (no DD) and 1 (DD) for each node.
 #' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.
-#' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web.
+#' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web if provided. NA means not inputs except the detritus input necessary to meet food web demand.
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients.
 #' @param returnnet A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.
@@ -175,12 +175,22 @@ getPARAMS <- function(usin,
         nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
 
     net[abs(net) < 1e-8] = 0
+
+    # Identify detritus pools:
+    dID = which(detplant$isDetritus == 1)
+
+    # If external inputs are zero, then calculate the minimum required.
+    if(any(is.na(externalinputs))){
+      externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
+      externalinputs[dID,] = unname(net[dID,which.max(net[dID,])]/Qmat[dID,which.max(net[dID,])])*Qmat[dID,]
+    }
+
     # Check that detritus inputs meet demand:
-    if(any(externalinputs < net)){
+    if(any(externalinputs < (net - 1.5e-8))){ # Included a small deviance based on base R tolerance
       print(net)
       stop("External inputs need to be greater than demand. This is probably an issue with the detritus pool for one or more elements. See the net changes above and increase inputs so that they are larger.")
     }
-    dID = which(detplant$isDetritus == 1)
+
     detritusloss = (externalinputs[dID,] + net[dID,])/c(usin$prop$general$Carbon$B[dID]*sweep(Qmat, 1, Qmat[, 1], "/")[dID,])
 
     return(list(yeqm = eqm_biomass,

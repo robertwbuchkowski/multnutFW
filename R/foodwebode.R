@@ -145,8 +145,6 @@ foodwebode <- function(t,y,pars){
 
   mineralization = cbind(mineralization[,1], mineralization[,-1][,1:(ncol(mineralization[,-1])/2)] - mineralization[,-1][,(1+ncol(mineralization[,-1])/2):ncol(mineralization[,-1])])
 
-
-
   mineralization = mineralization*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
   # Calculate the mineralization rate given the change in carbon and fixed C:X ratio for all non-detritus nodes:
