@@ -32,6 +32,12 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
                            apply(usin$imat > 0, 1, sum) > 1 # Species must have more than one food item
   ))
 
+  # Add in the diet limits for cannibalism:
+  jdi = usin$imat
+  diag(jdi) = 0
+  diag(dietlimits) = usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon))
+
+
   for(sp in species){
 
 

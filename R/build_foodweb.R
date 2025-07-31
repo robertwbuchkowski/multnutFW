@@ -134,7 +134,7 @@ build_foodweb <- function(feeding,
 
   aelist = vector(mode = "list", length = length(element_list))
 
-  aemat = matrix(1,
+  aemat = matrix(0,
                          dimnames = list(unique(properties$ID), unique(properties$ID)),
                          ncol = length(unique(properties$ID)), nrow = length(unique(properties$ID)), byrow = TRUE)
 
