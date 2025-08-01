@@ -24,6 +24,7 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
   }else{
     if(!all(dim(dietlimits) == dim(usin$imat))) stop("dietlimits must have the same dimensions as imat")
     if(any(dietlimits > 1) | any(dietlimits < 0)) stop("dietlimits must be a proportion of the diet between 0 and 1")
+    warning("The function automatically reduces the maximum rates of cannibalism to levels that allow positive consumption.")
   }
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
   species = unname(which(apply(do.call("rbind", comana(usin)$mineralization)* # This is the mineralizaiton
@@ -35,7 +36,7 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
   # Add in the diet limits for cannibalism:
   jdi = usin$imat
   diag(jdi) = 0
-  diag(dietlimits) = usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon))
+  diag(dietlimits) = pmin(diag(dietlimits),usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon)))
 
 
   for(sp in species){
