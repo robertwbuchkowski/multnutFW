@@ -42,7 +42,7 @@ getPARAMS <- function(usin,
   if(!Conly){
     # If the model allows diet correction, start there:
     if(diet_correct){
-      usin = correct_diet(usin, dietlimits = DIETLIMITS)
+      usin = suppressWarnings(correct_diet(usin, dietlimits = DIETLIMITS))
     }
 
     usin = correct_respiration(usin, output_type = F)[[1]]
