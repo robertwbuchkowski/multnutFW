@@ -47,7 +47,7 @@ whomineralizes <- function(usin, elements = "All", selected = NULL){
     output[[el]] = data.frame(
       ID = unname(usin$prop$general$Carbon$ID), # Name of the node
       Element = element,
-      Direct = res1$mineralization[[element]]/sum(res1$mineralization[[element]]), # Direct C mineralization--the amount that the species respires over the total
+      Direct = res1$mineralization[[element]],
       Indirect = NA) # Save space for indirect
     rownames(output) = NULL # remove rownames
 
@@ -55,12 +55,20 @@ whomineralizes <- function(usin, elements = "All", selected = NULL){
 
     # Calculate the indirect effects by removing a single node from the community and calculating the difference
     for(rmnode in Nnames){
-      usinmod = removenodes(usin, rmnode) # Remove a code
-      res2 = comana(usinmod) # Calculate the new fluxes
+      usinmod = removenodes(usin, rmnode) # Remove a node
+
+      # Rescale preferences to 1:
+      usinmod$imat = sweep(usinmod$imat, 1, rowSums(usinmod$imat), FUN = "/")
+      usinmod$imat[!is.finite(usinmod$imat)] = 0 # Replace non-finite values with 0 because total consumption was zero in this case
+
+      # Calculate the new fluxes:
+      res2 = comana(usinmod)
 
       # Indirect carbon flux: accounts for change caused by removing the node less the node direct effect.
       output[[el]][output[[el]]$ID == rmnode, "Indirect"] =
-        (sum(res1$mineralization[[element]]) - res1$mineralization[[element]][rmnode] - sum(res2$mineralization[[element]]))/sum(res1$mineralization[[element]])
+        (sum(res1$mineralization[[element]]) - # Flux with the organism (can be positive or negative)
+           res1$mineralization[[element]][rmnode] - # Organism direct contribution (can be positive or negative)
+           sum(res2$mineralization[[element]])) # Flux without the organism (can be positive or negative)
     }
   }
 
