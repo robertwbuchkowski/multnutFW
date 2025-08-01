@@ -19,6 +19,8 @@
 #' ii = c(0,10,0.5,0.01)
 #' io = c(0,0.1, 0.1, 0.1)
 #' getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io)
+#' # Can also exclude external inputs and have the function calculate the minimum amount necessary.
+#' getPARAMS(intro_comm, externalinputs = NA, inorganicinputs = ii, inorganicloss = io)
 #' @export
 getPARAMS <- function(usin,
                       DIETLIMITS = NA,
@@ -179,7 +181,7 @@ getPARAMS <- function(usin,
     # Identify detritus pools:
     dID = which(detplant$isDetritus == 1)
 
-    # If external inputs are zero, then calculate the minimum required.
+    # If external inputs are NA, then calculate the minimum required.
     if(any(is.na(externalinputs))){
       externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
       externalinputs[dID,] = unname(net[dID,which.max(net[dID,])]/Qmat[dID,which.max(net[dID,])])*Qmat[dID,]
