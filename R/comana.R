@@ -21,7 +21,8 @@ comana <- function(usin, biomass_weight_preference = FALSE){
   Nnodes = dim(imat)[1] # Number of nodes in the food web
 
   # Confirm that all rows of imat sum to 1:
-  if(!all(rowSums(imat) %in% c(0,1))){
+  if(!all(abs(rowSums(imat) - round(rowSums(imat))) < .Machine$double.eps^0.5 & (round(rowSums(imat)) %in% c(0, 1)))
+     ){
     warning("All rows of imat must sum to 1 or 0, so feeding preferences are being rescaled.")
 
     imat = sweep(imat, 1, rowSums(imat), FUN = "/")

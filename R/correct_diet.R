@@ -5,12 +5,13 @@
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
 #' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
+#' @param cannibalism_prop_deviance The proportion of the diet that comes from cannibalism is limited by physiological efficiency. This function sets this limit automatically, but to avoid a singular solution we need to add a small buffer. The default is 1% or 0.01, but can be adjusted if desired.
 #' @return The modified community with new diet preferences.
 #' @examples
 #' # Basic example with introductory community
 #' correct_diet(intro_comm)
 #' @export
-correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FALSE){
+correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FALSE, cannibalism_prop_deviance = 0.01){
 
   # Weight preferences if needed:
   if(biomass_weight_preference){
@@ -26,18 +27,22 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
     if(any(dietlimits > 1) | any(dietlimits < 0)) stop("dietlimits must be a proportion of the diet between 0 and 1")
     warning("The function automatically reduces the maximum rates of cannibalism to levels that allow positive consumption.")
   }
+
+
+  # Add in the diet limits for cannibalism:
+  jdi = usin$imat
+  diag(jdi) = 0
+  cpd = diag(jdi)
+  cpd[which(diag(usin$imat) > 0)] = cannibalism_prop_deviance
+  diag(dietlimits) = pmin(diag(dietlimits),usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon))) - cpd
+  rm(cpd, jdi)
+
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
   species = unname(which(apply(do.call("rbind", comana(usin)$mineralization)* # This is the mineralizaiton
                                  do.call("rbind",lapply(usin$prop$general, function(x) (1-x$canIMM))), # This means that if canIMM == 1 the negative number is multiplied by zero and removed so that the test of needing correction fails. If canIMM ==0, then the numbers are left as is.
                                2, function(x) any(x < 0)) &
                            apply(usin$imat > 0, 1, sum) > 1 # Species must have more than one food item
   ))
-
-  # Add in the diet limits for cannibalism:
-  jdi = usin$imat
-  diag(jdi) = 0
-  diag(dietlimits) = pmin(diag(dietlimits),usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon)))
-
 
   for(sp in species){
 
