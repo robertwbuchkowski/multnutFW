@@ -34,7 +34,7 @@ correct_diet <- function(usin,dietlimits = c(NA), biomass_weight_preference = FA
   diag(jdi) = 0
   cpd = diag(jdi)
   cpd[which(diag(usin$imat) > 0)] = cannibalism_prop_deviance
-  diag(dietlimits) = pmin(diag(dietlimits),usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- diag(usin$prop$assimilation$Carbon))) - cpd
+  diag(dietlimits) = pmin(diag(dietlimits),usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*jdi)/(1- usin$prop$general$Carbon$p*diag(usin$prop$assimilation$Carbon))) - cpd
   rm(cpd, jdi)
 
   #Identify the species that need correction by having negative mineralization and canIMM == 0 and more than 1 prey item
