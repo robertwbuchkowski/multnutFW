@@ -6,19 +6,26 @@
 #' @param Conly Boolean: Is the model meant for carbon only?
 #' @param densitydependence Which nodes have density dependence? NA default means none of them do. Should be a vector of 0 (no DD) and 1 (DD) for each node.
 #' @param functionalresponse The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.
-#' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web if provided. NA means not inputs except the detritus input necessary to meet food web demand.
+#' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. NA means not inputs except the detritus input necessary to meet food web demand.
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param returnnet A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
+#' For external inputs, Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web if provided.
 #' @examples
 #' # Basic call.
-#' getPARAMS(intro_comm, externalinputs = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018)), inorganicinputs = c(0,10,0.5,0.01), inorganicloss = c(0,0.1, 0.1, 0.1))
-#' # Can also exclude external inputs and have the function calculate the minimum amount necessary. You can also exclude inorganic inputs and outputs and have the resulting simulation just track changes.
+#' ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
+#' ii = c(0,10,0.5,0.01)
+#' il = c(0,0.1, 0.1, 0.1)
+#' getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = il)
+#' # Can also exclude external inputs and have the function calculate the minimum amount necessary.
+#' # You can also exclude inorganic inputs and outputs and
+#' # have the resulting simulation just track changes.
 #' getPARAMS(intro_comm, externalinputs = NA, inorganicinputs = NA, inorganicloss = NA)
 #' @export
+#'
 getPARAMS <- function(usin,
                       DIETLIMITS = NA,
                       diet_correct = TRUE,
@@ -187,7 +194,12 @@ getPARAMS <- function(usin,
     # If external inputs are NA, then calculate the minimum required.
     if(any(is.na(externalinputs))){
       externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
-      externalinputs[dID,] = unname(net[dID,which.max(net[dID,])]/Qmat[dID,which.max(net[dID,])])*Qmat[dID,]
+
+      for (i in dID) {
+        max_col <- which.max(net[i, ])
+        externalinputs[i, ] <- unname(net[i, max_col] / Qmat[i, max_col]) * Qmat[i, ]
+      }
+
     }
 
     # Check that detritus inputs meet demand:

@@ -5,7 +5,7 @@
 #' @param usin The input community in which to fix the diets.
 #' @param dietlimits # A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.
 #' @param biomass_weight_preference Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.
-#' @param cannibalism_prop_deviance The proportion of the diet that comes from cannibalism is limited by physiological efficiency. This function sets this limit automatically, but to avoid a singular solution we need to add a small buffer. The default is 1% or 0.01, but can be adjusted if desired.
+#' @param cannibalism_prop_deviance The proportion of the diet that comes from cannibalism is limited by physiological efficiency. This function sets this limit automatically, but to avoid a singular solution we need to add a small buffer. The default is 1 percent or 0.01, but can be adjusted if desired.
 #' @return The modified community with new diet preferences.
 #' @examples
 #' # Basic example with introductory community

@@ -30,11 +30,11 @@ getPARAMS(
 
 \item{functionalresponse}{The type of functional response to be used in the model simulation. Either NA to signify a Type I functional response or a matrix of values of the handling time to use a Type II functional response.}
 
-\item{externalinputs}{A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web.}
+\item{externalinputs}{A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. NA means not inputs except the detritus input necessary to meet food web demand.}
 
-\item{inorganicinputs}{A vector of inputs for the inorganic nutrients.}
+\item{inorganicinputs}{A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
 
-\item{inorganicloss}{A vector of loss rates for the inorganic nutrients.}
+\item{inorganicloss}{A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
 
 \item{returnnet}{A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.}
 }
@@ -46,11 +46,16 @@ A function to get the parameters for a food web model.
 }
 \details{
 A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
+For external inputs, Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web if provided.
 }
 \examples{
 # Basic call.
 ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
 ii = c(0,10,0.5,0.01)
-io = c(0,0.1, 0.1, 0.1)
-getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io)
+il = c(0,0.1, 0.1, 0.1)
+getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = il)
+# Can also exclude external inputs and have the function calculate the minimum amount necessary.
+# You can also exclude inorganic inputs and outputs and
+# have the resulting simulation just track changes.
+getPARAMS(intro_comm, externalinputs = NA, inorganicinputs = NA, inorganicloss = NA)
 }

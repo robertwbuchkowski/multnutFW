@@ -4,7 +4,12 @@
 \alias{correct_diet}
 \title{A function to correct the diet of trophic species.}
 \usage{
-correct_diet(usin, dietlimits = c(NA), biomass_weight_preference = FALSE)
+correct_diet(
+  usin,
+  dietlimits = c(NA),
+  biomass_weight_preference = FALSE,
+  cannibalism_prop_deviance = 0.01
+)
 }
 \arguments{
 \item{usin}{The input community in which to fix the diets.}
@@ -12,6 +17,8 @@ correct_diet(usin, dietlimits = c(NA), biomass_weight_preference = FALSE)
 \item{dietlimits}{# A matrix the same size as imat that gives the diet limits as a proportion of the total diet. All values must be between 0 and 1. Leaving it as NA sets the limits of all diet items to 1.}
 
 \item{biomass_weight_preference}{Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.}
+
+\item{cannibalism_prop_deviance}{The proportion of the diet that comes from cannibalism is limited by physiological efficiency. This function sets this limit automatically, but to avoid a singular solution we need to add a small buffer. The default is 1 percent or 0.01, but can be adjusted if desired.}
 }
 \value{
 The modified community with new diet preferences.

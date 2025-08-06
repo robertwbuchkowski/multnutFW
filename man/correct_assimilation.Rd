@@ -18,7 +18,7 @@ correct_assimilation(
 \item{biomass_weight_preference}{Should the preference matrix be weighted by biomass inside this function? Default, False, assumes that you have already done this with the function biomass_weight_preferences or don't want to weight by biomass.}
 }
 \value{
-The modified community with a higher respiration rate.
+The modified community with a lower carbon assimilation efficiency when necessary.
 }
 \description{
 A function to reduce growth by increasing respiration.
