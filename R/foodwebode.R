@@ -100,14 +100,33 @@ foodwebode <- function(t,y,pars){
 
   f.dir.a = rep("=", length(f.rhs.a))
 
-  f.rhs.b = as.vector(t(unname(cbind(matrix(0, nrow = nrow(pars$canIMMmat), ncol = ncol(pars$canIMMmat)-1), sweep(pars$canIMMmat,2,as.vector(netinog)*1, "*"))))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
+  # Switch depending on whether we are limiting inorganic nutrients:
+  if(any(is.na(netinog))){ # When NOT tracking inorganic nutrients:
 
-  f.con.b = diag(ncol(f.con.a))
+    f.rhs.b = as.vector(t(unname(cbind(matrix(0, nrow = nrow(pars$canIMMmat), ncol = ncol(pars$canIMMmat)-1), pars$canIMMmat))))
 
-  f.dir.b = rep(c(rep(">=", ncol(Qmat)), rep("<=", ncol(Qmat)-1)), nrow(Qmat))
+    # Which constaints to keep:
+    ctk = which(f.rhs.b == 0)
+
+    f.rhs.b = f.rhs.b[ctk]
+
+
+    f.con.b = diag(ncol(f.con.a))[ctk,]
+
+    f.dir.b = rep(c(rep(">=", ncol(Qmat)), rep("<=", ncol(Qmat)-1)), nrow(Qmat))[ctk]
+
+  }else{ # When tracking inorganic nutrients:
+    f.rhs.b = as.vector(t(unname(cbind(matrix(0, nrow = nrow(pars$canIMMmat), ncol = ncol(pars$canIMMmat)-1), sweep(pars$canIMMmat,2,as.vector(netinog)*1, "*"))))) # This code puts the total available inorganic nutrients into the rhs for any node that can immobilize it. It is negative because the mineralization must be greater than that and negative mineralization is immobilization.
+
+    f.con.b = diag(ncol(f.con.a))
+
+    f.dir.b = rep(c(rep(">=", ncol(Qmat)), rep("<=", ncol(Qmat)-1)), nrow(Qmat))
+  }
+
+
 
   # Now we need to add constraints for any potential conflict between nodes:
-  if(any(colSums(pars$canIMMmat) > 1)){
+  if(any(colSums(pars$canIMMmat) > 1) & !any(is.na(netinog))){
 
     f.con.c = matrix(0, nrow = dim(Qmat)[2], ncol = ncol(f.con.b))
 
@@ -151,7 +170,11 @@ foodwebode <- function(t,y,pars){
   mineralization2 = (netwithoutmineralization - matrix(netwithoutmineralization[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat)*matrix(1-pars$detplant$isDetritus, nrow = nrow(ymat), ncol = ncol(ymat))
 
     # Calculate changes in inorganic pools:
-  dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
+    dinorganic = colSums(mineralization)
+  }else{
+    dinorganic = colSums(mineralization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+  }
 
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithoutmineralization - mineralization
