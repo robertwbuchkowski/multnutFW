@@ -23,7 +23,7 @@ foodwebode <- function(t,y,pars){
   consumption_Carbon = pars$cij*predC*preyC/(1 + pars$cij*pars$h*preyC)
 
   # Calculate consumption rates:
-  consumption = lapply(c(1,2,3,4),
+  consumption = lapply(seq(1, ncol(Qmat),1),
                        function(lai) {
                          consumption_Carbon*matrix(Qmat[,lai], nrow = nrow(pars$cij), ncol = ncol(pars$cij), byrow = T)
                        })
