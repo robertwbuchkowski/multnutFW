@@ -144,6 +144,9 @@ foodwebode <- function(t,y,pars){
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
 
+  # Remove detritus mineralization (does not exhibit this stoichiometry):
+  mineralization[which(pars$detplant$isDetritus == 1),] = 0
+
   Det_Qmat_change = (sweep(ymat + netwithmineralization,1, (ymat + netwithmineralization)[,1], "/") - Qmat)[pars$detplant$isDetritus == 1, ]
 
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
