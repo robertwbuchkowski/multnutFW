@@ -50,7 +50,7 @@ For external inputs, Non-zero inputs should match the stoichiometry of non-detri
 }
 \examples{
 # Basic call.
-ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
+ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150.0,7.5,2.4,2.7), c(15.000,0.450,0.150,0.135))
 ii = c(0,10,0.5,0.01)
 il = c(0,0.1, 0.1, 0.1)
 getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = il)
