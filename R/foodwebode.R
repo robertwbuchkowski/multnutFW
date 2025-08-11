@@ -13,10 +13,6 @@ foodwebode <- function(t,y,pars){
 
   Qmat = sweep(ymat, 1, ymat[, 1], "/")
 
-  # Losses from detritus:
-  detloss = matrix(0, nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
-  detloss[which(pars$detplant$isDetritus == 1),] = pars$detritusloss
-
   # Calculate the consumption rates:
   predC = matrix(ymat[,1], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
   preyC = t(predC)
@@ -37,7 +33,7 @@ foodwebode <- function(t,y,pars){
     pars$externalinputs -
 
     # Loss from detritus:
-    detloss*ymat +
+    pars$nodeloss*ymat +
 
     # Gains from consumption:
     pars$pmat*sapply(Map(function(XX,YY) XX*YY, consumption, pars$assimilation), rowSums) -

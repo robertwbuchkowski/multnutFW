@@ -186,29 +186,36 @@ getPARAMS <- function(usin,
           colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
         nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
 
-    net[abs(net) < 1e-8] = 0
+    net[abs(net) < 1.5e-8] = 0
 
-    # Identify detritus pools:
-    dID = which(detplant$isDetritus == 1)
+
+    # Identify the basal resource pools:
+    basalID = unname(which(TLcheddar(intro_comm$imat) == 1))
 
     # If external inputs are NA, then calculate the minimum required.
     if(any(is.na(externalinputs))){
       externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
 
-      for (i in dID) {
-        max_col <- which.max(net[i, ])
-        externalinputs[i, ] <- unname(net[i, max_col] / Qmat[i, max_col]) * Qmat[i, ]
+      for (i in basalID) {
+        min_col <- unname(which.min((net/Qmat)[i, ]))
+
+        if(net[i,min_col] < 0){ # Only add inputs if the organism needs them: i.e., the net is negative!
+          externalinputs[i, ] <- unname(-(net/Qmat)[i, min_col])*Qmat[i,]
+        }
       }
-
     }
 
-    # Check that detritus inputs meet demand:
-    if(any(externalinputs < (net - 1.5e-8))){ # Included a small deviance based on base R tolerance
-      print(net)
-      stop("External inputs need to be greater than demand. This is probably an issue with the detritus pool for one or more elements. See the net changes above and increase inputs so that they are larger.")
+    # Check that inputs meet demand:
+    if(any(externalinputs + net + 1.5e-8 < 0)){ # Included a small deviance based on base R tolerance
+      print(externalinputs + net)
+      stop("External inputs need to be greater than demand. This is probably an issue with one of the basal resource pools for one or more elements. See the net changes above and increase inputs so that they are larger. NOTE: Negative numbers mean net loss, so you don't need to worry about them!")
     }
 
-    detritusloss = (externalinputs[dID,] + net[dID,])/c(usin$prop$general$Carbon$B[dID]*sweep(Qmat, 1, Qmat[, 1], "/")[dID,])
+    nodeloss = matrix(0, nrow = Nnodes, ncol = Nelements)
+
+    nodeloss[basalID,] = (externalinputs[basalID,] + net[basalID,])/c(usin$prop$general$Carbon$B[basalID]*sweep(Qmat, 1, Qmat[, 1], "/")[basalID,])
+
+    nodeloss[abs(nodeloss) < 1.5e-8] = 0
 
     return(list(yeqm = eqm_biomass,
                 parameters =
@@ -223,7 +230,7 @@ getPARAMS <- function(usin,
                        canIMMmat = canIMMmat,
                        ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat,
                        externalinputs = externalinputs,
-                       detritusloss = detritusloss,
+                       nodeloss = nodeloss,
                        inorganicinputs = inorganicinputs,
                        inorganicloss = inorganicloss)))
   }
