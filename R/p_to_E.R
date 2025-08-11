@@ -11,14 +11,27 @@ p_to_E <- function(usin){
   # Calculate the fluxes for use in converting p to E:
   coutput = comana(usin)
 
-  # Set p to zero in the community:
+  # Set p to one in the community:
   usin$prop$general$Carbon$p = 1
 
   # Solve for p by rearranging the carbon equation for each species:
   Eout = (usin$prop$general$Carbon$p*rowSums(usin$prop$assimilation$Carbon*coutput$fmat$Carbon) -  usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B - colSums(coutput$fmat$Carbon))/usin$prop$general$Carbon$B
 
+  # Replace Eout for basal organisms that are not detritus with respiration terms:
+  BO = unname(which(TLcheddar(usin$imat) == 1 & usin$prop$general$Carbon$isDetritus == 0))
+  for(i in BO){
+    Eout[i] = c((coutput$consumption -  usin$prop$general$Carbon$d*usin$prop$general$Carbon$B -usin$prop$general$Carbon$Ehat*usin$prop$general$Carbon$B - colSums(coutput$fmat$Carbon))/usin$prop$general$Carbon$B)[i]
+  }
+
   # No respiration for detritus:
   Eout = ifelse(usin$prop$general$Carbon$isDetritus == 1, 0, Eout)
+
+  # Round to machine accuracy:
+  round_to_epsilon <- function(x) {
+    eps <- .Machine$double.eps
+    round(x / eps) * eps
+  }
+  Eout = round_to_epsilon(Eout)
 
   # Add to the community:
   usin$prop$general$Carbon$E = Eout

@@ -1,10 +1,10 @@
 test_that("stoichiometry works", {
-  ei = rbind(matrix(0, nrow = 4, ncol = 4), c(150, 150*0.05, 150*0.016, 150*0.018))
+  ei = rbind(matrix(0, nrow = 4, ncol = 4), c(160, 160*0.05, 160*0.016, 160*0.018), c(0,0,0,0))
   ii = c(0,10,0.5,0.01)
   io = c(0,0.1, 0.1, 0.1)
-  parameters = getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io, densitydependence = c(0,0,0,0,0))
+  parameters = getPARAMS(intro_comm, externalinputs = ei, inorganicinputs = ii, inorganicloss = io, densitydependence = c(0,0,0,0,0,0))
 
-  with(list(y = parameters$yeqm*c(rep(c(1,1,1,1,1.1), 4),1,1,1,1), pars = parameters$parameters), {
+  with(list(y = parameters$yeqm*c(rep(c(1,1,1,1,1.1,1), 4),1,1,1,1), pars = parameters$parameters), {
     ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
 
     Qmat = sweep(ymat, 1, ymat[, 1], "/")
