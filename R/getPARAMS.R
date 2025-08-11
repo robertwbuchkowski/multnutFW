@@ -9,7 +9,6 @@
 #' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. NA means not inputs except the detritus input necessary to meet food web demand.
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
-#' @param returnnet A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
@@ -120,44 +119,19 @@ getPARAMS <- function(usin,
 
   if(sum(detplant$NecomassRecycling ) > 1) stop("NecromassRecycling must sum to 1")
 
-  if(returnnet){
-    # Gains from consumption:
-    net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
-      # Losses from predation:
-      sapply(comana(usin)$fmat, colSums) -
-      # Natural death:
-      matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
-      # Excretion:
-      biomass_exrete +
 
-      # Detritus recycling:
-      matrix(detplant$FecalRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
-      matrix(
-        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
-        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) +  # arrange in a matrix by row so that the elements are in the columns.
 
-      matrix(detplant$NecromassRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
-      matrix(
-          colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")) + # A vector of carcases
-          colSums(biomass_exrete), # A vector of mineralization rates also back into the detritus pool
-        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
-
-    return(net)
+  if(any(is.na(c(inorganicinputs,inorganicloss)))){
+    inorganicinputs = rep(NA, Nelements)
+    inorganicloss = rep(NA, Nelements)
   }else{
+    # Create inorganic state variables:
+    inorganic_eqm = (inorganicinputs + # Input rates
+                       colSums(biomass_exrete))/ # A vector of mineralization rates
+      inorganicloss # Loss rates.
 
-    if(any(is.na(c(inorganicinputs,inorganicloss)))){
-      inorganic_eqm = rep(0, Nelements)
-      inorganicinputs = rep(NA, Nelements)
-      inorganicloss = rep(NA, Nelements)
-    }else{
-      # Create inorganic state variables:
-      inorganic_eqm = (inorganicinputs + # Input rates
-                         colSums(biomass_exrete))/ # A vector of mineralization rates
-        inorganicloss # Loss rates.
-
-      # Reset inorganic carbon to zero if needed:
-      inorganic_eqm[is.infinite(inorganic_eqm)] = 0
-    }
+    # Reset inorganic carbon to zero if needed:
+    inorganic_eqm[is.infinite(inorganic_eqm)] = 0
 
     names(inorganic_eqm) = paste0("Inorganic_", names(assimilation))
 
@@ -165,73 +139,83 @@ getPARAMS <- function(usin,
 
     # Paste inorganic state variables:
     eqm_biomass = c(eqm_biomass, inorganic_eqm)
-
-    # Gains from consumption:
-    net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
-      # Losses from predation:
-      sapply(comana(usin)$fmat, colSums) -
-      # Natural death:
-      matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
-      # Excretion:
-      biomass_exrete +
-      # Detritus recycling:
-
-      matrix(detplant$FecalRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
-      matrix(
-        colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
-        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) +
-
-          matrix(detplant$NecromassRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
-          matrix(
-          colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
-        nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
-
-    net[abs(net) < 1.5e-8] = 0
+  }
 
 
-    # Identify the basal resource pools:
-    basalID = unname(which(TLcheddar(usin$imat) == 1))
 
-    # If external inputs are NA, then calculate the minimum required.
-    if(any(is.na(externalinputs))){
-      externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
+  # Gains from consumption:
+  net = pmat*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) -
+    # Losses from predation:
+    sapply(comana(usin)$fmat, colSums) -
+    # Natural death:
+    matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/") -
+    # Excretion:
+    biomass_exrete +
+    # Detritus recycling:
 
-      for (i in basalID) {
-        min_col <- unname(which.min((net/Qmat)[i, ]))
+    matrix(detplant$FecalRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+    matrix(
+      colSums(sapply(Map(function(x,y) x*y, comana(usin)$fmat, lapply(usin$prop$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
+      nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) +
 
-        if(net[i,min_col] < 0){ # Only add inputs if the organism needs them: i.e., the net is negative!
-          externalinputs[i, ] <- unname(-(net/Qmat)[i, min_col])*Qmat[i,]
-        }
+    matrix(detplant$NecromassRecycling, nrow = nrow(Qmat), ncol = ncol(Qmat))* # A matrix to allocate the detritus recycling appropriately
+    matrix(
+      colSums(matrix(usin$prop$general$Carbon$d*usin$prop$general$Carbon$B, nrow = nrow(Qmat), ncol = ncol(Qmat))*sweep(Qmat, 1, Qmat[, 1], "/")), # A vector of carcases
+      nrow = nrow(Qmat), ncol = ncol(Qmat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
+
+  net[abs(net) < 1.5e-8] = 0
+
+
+  # Identify the basal resource pools:
+  basalID = unname(which(TLcheddar(usin$imat) == 1))
+
+  # If external inputs are NA, then calculate the minimum required.
+  if(any(is.na(externalinputs))){
+    externalinputs = matrix(0, nrow = Nnodes, ncol = Nelements)
+
+    for (i in basalID) {
+      min_col <- unname(which.min((net/Qmat)[i, ]))
+
+      if(net[i,min_col] < 0){ # Only add inputs if the organism needs them: i.e., the net is negative!
+        externalinputs[i, ] <- unname(-(net/Qmat)[i, min_col])*Qmat[i,]
       }
     }
-
-    # Check that inputs meet demand:
-    if(any(externalinputs + net + 1.5e-8 < 0)){ # Included a small deviance based on base R tolerance
-      print(externalinputs + net)
-      stop("External inputs need to be greater than demand. This is probably an issue with one of the basal resource pools for one or more elements. See the net changes above and increase inputs so that they are larger. NOTE: Negative numbers mean net loss, so you don't need to worry about them!")
-    }
-
-    nodeloss = matrix(0, nrow = Nnodes, ncol = Nelements)
-
-    nodeloss[basalID,] = (externalinputs[basalID,] + net[basalID,])/c(usin$prop$general$Carbon$B[basalID]*sweep(Qmat, 1, Qmat[, 1], "/")[basalID,])
-
-    nodeloss[abs(nodeloss) < 1.5e-8] = 0
-
-    return(list(yeqm = eqm_biomass,
-                parameters =
-                  list(cij = cij,
-                       h = hmat,
-                       death = death,
-                       pmat = pmat,
-                       # Get rid of Qmat for now.
-                       # Qmat = sweep(Qmat, 1, Qmat[, 1], "/"),
-                       assimilation = assimilation,
-                       detplant = detplant,
-                       canIMMmat = canIMMmat,
-                       ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat,
-                       externalinputs = externalinputs,
-                       nodeloss = nodeloss,
-                       inorganicinputs = inorganicinputs,
-                       inorganicloss = inorganicloss)))
   }
+
+  # Check that inputs meet demand:
+  if(any(externalinputs + net + 1.5e-8 < 0)){ # Included a small deviance based on base R tolerance
+    print(externalinputs + net)
+    stop("External inputs need to be greater than demand. This is probably an issue with one of the basal resource pools for one or more elements. See the net changes above and increase inputs so that they are larger. NOTE: Negative numbers mean net loss, so you don't need to worry about them!")
+  }
+
+  nodeloss = matrix(0, nrow = Nnodes, ncol = Nelements)
+
+  nodeloss[basalID,] = (externalinputs[basalID,] + net[basalID,])/c(usin$prop$general$Carbon$B[basalID]*sweep(Qmat, 1, Qmat[, 1], "/")[basalID,])
+
+  nodeloss[abs(nodeloss) < 1.5e-8] = 0
+
+  biomass = usin$prop$general$Carbon$B
+
+  names(biomass) = usin$prop$general$Carbon$ID
+
+  Qmat_in = sweep(Qmat, 1, Qmat[, 1], "/")
+
+  Qchange = c(Qmat_in[detplant$isDetritus == 1,])
+
+  return(list(yeqm = c(biomass,Qchange),
+              parameters =
+                list(cij = cij,
+                     h = hmat,
+                     death = death,
+                     Qmat = Qmat_in,
+                     pmat = pmat,
+                     assimilation = assimilation,
+                     detplant = detplant,
+                     canIMMmat = canIMMmat,
+                     ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat,
+                     externalinputs = externalinputs,
+                     nodeloss = nodeloss,
+                     inorganicinputs = inorganicinputs,
+                     inorganicloss = inorganicloss)))
+
 }

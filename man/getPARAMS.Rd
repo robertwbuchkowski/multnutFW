@@ -35,8 +35,6 @@ getPARAMS(
 \item{inorganicinputs}{A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
 
 \item{inorganicloss}{A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
-
-\item{returnnet}{A Boolean to determine if the goal is to return the net change in the food web. Used to check equilibrium.}
 }
 \value{
 A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.

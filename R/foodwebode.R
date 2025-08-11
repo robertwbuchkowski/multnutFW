@@ -9,9 +9,19 @@
 #' @export
 foodwebode <- function(t,y,pars){
 
-  ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
+  biomass = y[1:nrow(pars$pmat)]
 
-  Qmat = sweep(ymat, 1, ymat[, 1], "/")
+  Det_Qmat = y[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*ncol(pars$pmat))]
+
+  # ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
+
+  # Qmat = sweep(ymat, 1, ymat[, 1], "/")
+
+  Qmat = pars$Qmat
+
+  Qmat[pars$detplant$isDetritus == 1, ] = Det_Qmat
+
+  ymat = biomass*Qmat
 
   # Calculate the consumption rates:
   predC = matrix(ymat[,1], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
@@ -54,17 +64,53 @@ foodwebode <- function(t,y,pars){
                        pars$death[,2]*pars$death[,3]*ymat[,1]*ymat[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat), # density-dependent death
       nrow = nrow(ymat), ncol = ncol(ymat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
 
-  # Assign the inorganic nutrient pools:
-  inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
-
-  # Calculate the total amount of inorganic nutrient available to the food web:
-  netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
-
-  if(any(is.na(netinog))){
+  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
     immobilization = -pars$canIMMmat*netwithoutmineralization
     immobilization[immobilization < 0] = 0
   }else{
-    stop("NOT READY FOR THIS YET!")
+    # Assign the inorganic nutrient pools:
+    inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
+
+    # Calculate the total amount of inorganic nutrient available to the food web:
+    netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+
+    immobilization = -pars$canIMMmat*netwithoutmineralization
+    immobilization[immobilization < 0] = 0
+
+    n_groups <- nrow(immobilization)
+    n_nutrients <- ncol(immobilization)
+
+    allocation <- matrix(0, nrow = n_groups, ncol = n_nutrients)
+
+    for (j in seq_len(n_nutrients)) {
+      nutrient_available <- netinog[j]
+      nutrient_demand <- immobilization[, j]
+      total_demand <- sum(nutrient_demand)
+
+      if (nutrient_available >= total_demand) {
+        # Enough nutrient to meet all demand
+        allocation[, j] <- nutrient_demand
+      } else {
+        stop("Not working yet.")
+        # Not enough nutrient: allocate by biomass weight
+        weights <- ymat[,1] / sum(ymat[,1])
+        alloc <- weights * nutrient_available
+        allocation[, j] <- pmin(alloc, nutrient_demand)
+
+        # Optional: redistribute remainder if some demand is still unmet
+        remainder <- nutrient_available - sum(allocation[, j])
+        if (remainder > 0) {
+          unmet <- nutrient_demand - allocation[, j]
+          unmet_weights <- ifelse(unmet > 0, ymat[,1], 0)
+          if (sum(unmet_weights) > 0) {
+            unmet_weights <- unmet_weights / sum(unmet_weights)
+            allocation[, j] <- allocation[, j] + unmet_weights * remainder
+            allocation[, j] <- pmin(allocation[, j], nutrient_demand)
+          }
+        }
+      }
+    }
+    immobilization = allocation
   }
 
   # Add in immobilized nutrients:
@@ -90,16 +136,23 @@ foodwebode <- function(t,y,pars){
 
   # Calculate changes in inorganic pools:
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    dinorganic = colSums(mineralization) + colSums(immobilization)
+    dinorganic = colSums(mineralization) - colSums(immobilization)
   }else{
-    dinorganic = colSums(mineralization) + colSums(immobilization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
+    dinorganic = colSums(mineralization) - colSums(immobilization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
   }
 
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
 
-  dy = c(netwithmineralization, dinorganic)
-  names(dy) = names(y)
+  Det_Qmat_change = (sweep(ymat + netwithmineralization,1, (ymat + netwithmineralization)[,1], "/") - Qmat)[pars$detplant$isDetritus == 1, ]
 
-  return(list(dy))
+  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
+    dy = c(netwithmineralization[,1],Det_Qmat_change)
+    names(dy) = names(y)
+    return(list(dy, dinorganic = dinorganic))
+  }else{
+    dy = c(netwithmineralization[,1],Det_Qmat_change, dinorganic)
+    names(dy) = names(y)
+    return(list(dy))
+  }
 }
