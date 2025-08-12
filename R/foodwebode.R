@@ -11,9 +11,11 @@ foodwebode <- function(t,y,pars){
 
   yunstd = y*pars$eqmStandard
 
-  biomass = y[1:nrow(pars$pmat)]
+  biomass = yunstd[1:nrow(pars$pmat)]
 
-  Det_Qmat = y[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
+  Det_Qmat = yunstd[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
+
+  Det_Qmat = Det_Qmat/biomass[pars$detplant$isDetritus == 1]
 
   # ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
 
@@ -21,7 +23,7 @@ foodwebode <- function(t,y,pars){
 
   Qmat = pars$Qmat
 
-  Qmat[pars$detplant$isDetritus == 1, ] = c(1,Det_Qmat)
+  Qmat[pars$detplant$isDetritus == 1,] = c(Qmat[pars$detplant$isDetritus == 1, 1],Det_Qmat)
 
   ymat = biomass*Qmat
 
@@ -70,6 +72,7 @@ foodwebode <- function(t,y,pars){
     immobilization = -pars$canIMMmat*netwithoutmineralization
     immobilization[immobilization < 0] = 0
   }else{
+    stop("not working yet")
     # Assign the inorganic nutrient pools:
     inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
 
@@ -136,6 +139,10 @@ foodwebode <- function(t,y,pars){
 
   mineralization = netwithrespiration - netwithrespiration[,1]/Qmat
 
+  # Remove detritus mineralization (does not exhibit this stoichiometry):
+
+  mineralization[which(pars$detplant$isDetritus == 1),] = 0
+
   # Calculate changes in inorganic pools:
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
     dinorganic = colSums(mineralization) - colSums(immobilization)
@@ -145,10 +152,6 @@ foodwebode <- function(t,y,pars){
 
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
-
-  # Remove detritus mineralization (does not exhibit this stoichiometry):
-
-  mineralization[which(pars$detplant$isDetritus == 1),] = 0
 
   D_element_biomass = (netwithmineralization[which(pars$detplant$isDetritus == 1),-1])
 
