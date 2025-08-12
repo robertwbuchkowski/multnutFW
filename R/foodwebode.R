@@ -11,7 +11,7 @@ foodwebode <- function(t,y,pars){
 
   biomass = y[1:nrow(pars$pmat)]
 
-  Det_Qmat = y[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*ncol(pars$pmat))]
+  Det_Qmat = y[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
 
   # ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
 
@@ -19,7 +19,7 @@ foodwebode <- function(t,y,pars){
 
   Qmat = pars$Qmat
 
-  Qmat[pars$detplant$isDetritus == 1, ] = Det_Qmat
+  Qmat[pars$detplant$isDetritus == 1, ] = c(1,Det_Qmat)
 
   ymat = biomass*Qmat
 
@@ -145,16 +145,17 @@ foodwebode <- function(t,y,pars){
   netwithmineralization = netwithrespiration - mineralization
 
   # Remove detritus mineralization (does not exhibit this stoichiometry):
+
   mineralization[which(pars$detplant$isDetritus == 1),] = 0
 
-  Det_Qmat_change = (sweep(ymat + netwithmineralization,1, (ymat + netwithmineralization)[,1], "/") - Qmat)[pars$detplant$isDetritus == 1, ]
+  D_element_biomass = (netwithmineralization[which(pars$detplant$isDetritus == 1),-1])
 
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    dy = c(netwithmineralization[,1],Det_Qmat_change)
+    dy = c(netwithmineralization[,1],D_element_biomass)
     names(dy) = names(y)
     return(list(dy, dinorganic = dinorganic))
   }else{
-    dy = c(netwithmineralization[,1],Det_Qmat_change, dinorganic)
+    dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
     names(dy) = names(y)
     return(list(dy))
   }

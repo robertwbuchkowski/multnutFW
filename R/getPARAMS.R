@@ -200,9 +200,14 @@ getPARAMS <- function(usin,
 
   Qmat_in = sweep(Qmat, 1, Qmat[, 1], "/")
 
-  Qchange = c(Qmat_in[detplant$isDetritus == 1,])
+  D_element_biomass = c((biomass*Qmat_in)[detplant$isDetritus == 1,-1])
 
-  return(list(yeqm = c(biomass,Qchange),
+  yeqm = c(biomass,D_element_biomass)
+
+  names(yeqm) = c(usin$prop$general$Carbon$ID,
+                  paste0(rep(usin$prop$general$Carbon$ID[detplant$isDetritus == 1], ncol(Qmat)-1), "_", rep(colnames(Qmat)[-1], each = sum(detplant$isDetritus == 1))))
+
+  return(list(yeqm = yeqm,
               parameters =
                 list(cij = cij,
                      h = hmat,
