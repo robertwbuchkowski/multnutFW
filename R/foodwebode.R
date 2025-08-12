@@ -9,6 +9,8 @@
 #' @export
 foodwebode <- function(t,y,pars){
 
+  yunstd = y*pars$eqmStandard
+
   biomass = y[1:nrow(pars$pmat)]
 
   Det_Qmat = y[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
@@ -151,10 +153,11 @@ foodwebode <- function(t,y,pars){
   D_element_biomass = (netwithmineralization[which(pars$detplant$isDetritus == 1),-1])
 
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    dy = c(netwithmineralization[,1],D_element_biomass)
+    dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
     names(dy) = names(y)
     return(list(dy, dinorganic = dinorganic))
   }else{
+    stop("not working yet")
     dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
     names(dy) = names(y)
     return(list(dy))

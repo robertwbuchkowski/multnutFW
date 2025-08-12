@@ -207,7 +207,7 @@ getPARAMS <- function(usin,
   names(yeqm) = c(usin$prop$general$Carbon$ID,
                   paste0(rep(usin$prop$general$Carbon$ID[detplant$isDetritus == 1], ncol(Qmat)-1), "_", rep(colnames(Qmat)[-1], each = sum(detplant$isDetritus == 1))))
 
-  return(list(yeqm = yeqm,
+  return(list(yeqm = yeqm/yeqm,
               parameters =
                 list(cij = cij,
                      h = hmat,
@@ -221,6 +221,7 @@ getPARAMS <- function(usin,
                      externalinputs = externalinputs,
                      nodeloss = nodeloss,
                      inorganicinputs = inorganicinputs,
-                     inorganicloss = inorganicloss)))
+                     inorganicloss = inorganicloss,
+                     eqmStandard = yeqm)))
 
 }
