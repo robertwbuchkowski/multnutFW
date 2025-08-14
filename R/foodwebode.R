@@ -13,19 +13,18 @@ foodwebode <- function(t,y,pars){
 
   biomass = yunstd[1:nrow(pars$pmat)]
 
-  Det_Qmat = yunstd[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
+  Det_stocks = yunstd[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
 
-  Det_Qmat = Det_Qmat/biomass[pars$detplant$isDetritus == 1]
-
-  # ymat = matrix(y[1:(nrow(pars$pmat)*ncol(pars$pmat))], nrow = nrow(pars$pmat), ncol = ncol(pars$pmat))
-
-  # Qmat = sweep(ymat, 1, ymat[, 1], "/")
+  Det_Qmat = Det_stocks/biomass[pars$detplant$isDetritus == 1]
 
   Qmat = pars$Qmat
 
   Qmat[pars$detplant$isDetritus == 1,] = c(Qmat[pars$detplant$isDetritus == 1, 1],Det_Qmat)
 
   ymat = biomass*Qmat
+
+  # Check to make sure the ymat is right:
+  if(!all.equal(unname(ymat[pars$detplant$isDetritus == 1,-1]),unname(Det_stocks))) stop("Error converting detritus nutrients.")
 
   # Calculate the consumption rates:
   predC = matrix(ymat[,1], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
