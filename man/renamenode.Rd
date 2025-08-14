@@ -4,10 +4,10 @@
 \alias{renamenode}
 \title{Rename a node in a  community.}
 \usage{
-renamenode(COMM, oldname, newname)
+renamenode(usin, oldname, newname)
 }
 \arguments{
-\item{COMM}{The community from which to remove nodes.}
+\item{usin}{The community from which to remove nodes.}
 
 \item{oldname}{The node's old name}
 

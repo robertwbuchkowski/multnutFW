@@ -4,10 +4,10 @@
 \alias{removenodes}
 \title{Remove nodes from community.}
 \usage{
-removenodes(COMM, toremove)
+removenodes(usin, toremove)
 }
 \arguments{
-\item{COMM}{The community from which to remove nodes.}
+\item{usin}{The community from which to remove nodes.}
 
 \item{toremove}{A vector of nodes to remove using their names.}
 }

@@ -235,57 +235,100 @@ RESCALE <- function(invec, a = 0, b = 1){
 
 #' Remove nodes from community.
 #'
-#' @param COMM The community from which to remove nodes.
+#' @param usin The community from which to remove nodes.
 #' @param toremove A vector of nodes to remove using their names.
 #' @return The community without the removed nodes.
 #' @examples
 #' removenodes(intro_comm, c("Pred"))
 #' @export
-removenodes <- function(COMM, toremove){
-  whichtorm = !(COMM$prop$general$Carbon$ID %in% toremove)
+removenodes <- function(usin, toremove){
+  whichtorm = !(usin$prop$general$Carbon$ID %in% toremove)
 
-  COMM$imat = COMM$imat[whichtorm,whichtorm]
+  usin$imat = usin$imat[whichtorm,whichtorm]
 
-  for(ii in 1:length(COMM$prop$general)){
-    COMM$prop$general[[ii]] = subset(COMM$prop$general[[ii]], !(COMM$prop$general[[ii]]$ID %in% toremove))
+  for(ii in 1:length(usin$prop$general)){
+    usin$prop$general[[ii]] = subset(usin$prop$general[[ii]], !(usin$prop$general[[ii]]$ID %in% toremove))
 
-    stopifnot(all(sort(COMM$prop$general[[ii]]$ID) == sort(rownames(COMM$imat))))
-    stopifnot(all(sort(COMM$prop$general[[ii]]$ID) == sort(colnames(COMM$imat))))
+    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(rownames(usin$imat))))
+    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(colnames(usin$imat))))
 
-    COMM$prop$assimilation[[ii]] = COMM$prop$assimilation[[ii]][whichtorm,whichtorm]
+    usin$prop$assimilation[[ii]] = usin$prop$assimilation[[ii]][whichtorm,whichtorm]
 
   }
-  return(COMM)
+  return(usin)
+}
+
+#' Remove nodes from simulation parameter set.
+#'
+#' @param paramset The parameter set from which to remove nodes.
+#' @param toremove The name of a node to remove a node using it's name.
+#' @return The parameter set without the removed node.
+#' @examples
+#' removenodes_sim(getPARAMS(intro_comm), c("Pred"))
+#' @export
+removenodes_sim <- function(paramset, toremove){
+
+  whichtokeep = !grepl(toremove, names(paramset$yeqm))
+
+  paramset$yeqm = paramset$yeqm[whichtokeep]
+
+  paramset$parameters$detplant = paramset$parameters$detplant[whichtokeep,]
+
+  paramset$parameters$death = paramset$parameters$death[whichtokeep,]
+
+  paramset$parameters$Qmat = paramset$parameters$Qmat[whichtokeep,]
+
+  paramset$parameters$pmat = paramset$parameters$pmat[whichtokeep,]
+
+  paramset$parameters$cij = paramset$parameters$cij[whichtokeep,whichtokeep]
+
+  paramset$parameters$h = paramset$parameters$h[whichtokeep,whichtokeep]
+
+  paramset$parameters$cij = paramset$parameters$cij[whichtokeep,whichtokeep]
+
+
+  usin$imat = usin$imat[whichtorm,whichtorm]
+
+  for(ii in 1:length(usin$prop$general)){
+    usin$prop$general[[ii]] = subset(usin$prop$general[[ii]], !(usin$prop$general[[ii]]$ID %in% toremove))
+
+    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(rownames(usin$imat))))
+    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(colnames(usin$imat))))
+
+    usin$prop$assimilation[[ii]] = usin$prop$assimilation[[ii]][whichtorm,whichtorm]
+
+  }
+  return(usin)
 }
 
 #' Rename a node in a  community.
 #'
-#' @param COMM The community from which to remove nodes.
+#' @param usin The community from which to remove nodes.
 #' @param oldname The node's old name
 #' @param newname The node's new name
 #' @return The community with the new name.
 #' @examples
 #' renamenode(intro_comm, oldname = "Pred", newname = "NewPredator")
 #' @export
-renamenode <- function(COMM, oldname,newname){
-  whichtorm = COMM$prop$general$Carbon$ID %in% oldname
+renamenode <- function(usin, oldname,newname){
+  whichtorm = usin$prop$general$Carbon$ID %in% oldname
 
-  colnames(COMM$imat)[whichtorm] = rownames(COMM$imat)[whichtorm] = newname
+  colnames(usin$imat)[whichtorm] = rownames(usin$imat)[whichtorm] = newname
 
-  COMM$prop$general$Carbon$ID[whichtorm] = newname
+  usin$prop$general$Carbon$ID[whichtorm] = newname
 
-  for(ii in 1:length(COMM$prop$general)){
-    COMM$prop$general[[ii]]$ID[whichtorm] = newname
+  for(ii in 1:length(usin$prop$general)){
+    usin$prop$general[[ii]]$ID[whichtorm] = newname
 
-    stopifnot(all(COMM$prop$general[[ii]]$ID == rownames(COMM$imat)))
-    stopifnot(all(COMM$prop$general[[ii]]$ID == colnames(COMM$imat)))
+    stopifnot(all(usin$prop$general[[ii]]$ID == rownames(usin$imat)))
+    stopifnot(all(usin$prop$general[[ii]]$ID == colnames(usin$imat)))
 
-    colnames(COMM$prop$assimilation[[ii]]) = colnames(COMM$imat)
-    rownames(COMM$prop$assimilation[[ii]]) = rownames(COMM$imat)
+    colnames(usin$prop$assimilation[[ii]]) = colnames(usin$imat)
+    rownames(usin$prop$assimilation[[ii]]) = rownames(usin$imat)
 
   }
 
-  return(COMM)
+  return(usin)
 }
 
 #' Check the carbon flux equilibrium output by comana.

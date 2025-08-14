@@ -207,6 +207,22 @@ getPARAMS <- function(usin,
   names(yeqm) = c(usin$prop$general$Carbon$ID,
                   paste0(rep(usin$prop$general$Carbon$ID[detplant$isDetritus == 1], ncol(Qmat)-1), "_", rep(colnames(Qmat)[-1], each = sum(detplant$isDetritus == 1))))
 
+  ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat
+
+  # Get the names right:
+  rownames(death) = usin$prop$general$Carbon$ID
+  rownames(detplant) = usin$prop$general$Carbon$ID
+  rownames(canIMMmat) = usin$prop$general$Carbon$ID
+  rownames(pmat) = usin$prop$general$Carbon$ID
+  rownames(Qmat_in) = usin$prop$general$Carbon$ID
+  names(ECarbon) = usin$prop$general$Carbon$ID
+
+  rownames(nodeloss) = rownames(externalinputs) = usin$prop$general$Carbon$ID
+
+  colnames(externalinputs) = colnames(nodeloss) = names(inorganicinputs) = names(inorganicloss) = colnames(Qmat)
+
+
+
   return(list(yeqm = yeqm/yeqm,
               parameters =
                 list(cij = cij,
@@ -217,7 +233,7 @@ getPARAMS <- function(usin,
                      assimilation = assimilation,
                      detplant = detplant,
                      canIMMmat = canIMMmat,
-                     ECarbon = usin$prop$general$Carbon$E + usin$prop$general$Carbon$Ehat,
+                     ECarbon = ECarbon,
                      externalinputs = externalinputs,
                      nodeloss = nodeloss,
                      inorganicinputs = inorganicinputs,
