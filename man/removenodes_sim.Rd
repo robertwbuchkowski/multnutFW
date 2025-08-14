@@ -9,14 +9,14 @@ removenodes_sim(paramset, toremove)
 \arguments{
 \item{paramset}{The parameter set from which to remove nodes.}
 
-\item{toremove}{The name of a node to remove a node using it's name.}
+\item{toremove}{A vector of the names of nodes to remove.}
 }
 \value{
-The parameter set without the removed node.
+The parameter set without the removed nodes.
 }
 \description{
 Remove nodes from simulation parameter set.
 }
 \examples{
-removenodes_sim(getPARAMS(intro_comm), c("Pred"))
+removenodes_sim(getPARAMS(intro_comm), c("Pred", "Detritus"))
 }

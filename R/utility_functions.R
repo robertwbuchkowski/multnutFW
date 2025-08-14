@@ -261,44 +261,49 @@ removenodes <- function(usin, toremove){
 #' Remove nodes from simulation parameter set.
 #'
 #' @param paramset The parameter set from which to remove nodes.
-#' @param toremove The name of a node to remove a node using it's name.
-#' @return The parameter set without the removed node.
+#' @param toremove A vector of the names of nodes to remove.
+#' @return The parameter set without the removed nodes.
 #' @examples
-#' removenodes_sim(getPARAMS(intro_comm), c("Pred"))
+#' removenodes_sim(getPARAMS(intro_comm), c("Pred", "Detritus"))
 #' @export
 removenodes_sim <- function(paramset, toremove){
 
-  whichtokeep = !grepl(toremove, names(paramset$yeqm))
+  for(toremove_current in toremove){
+    whichtokeep = !grepl(toremove_current, colnames(paramset$parameters$cij))
 
-  paramset$yeqm = paramset$yeqm[whichtokeep]
+    whichtokeep_eqm = !grepl(toremove_current, names(paramset$yeqm))
 
-  paramset$parameters$detplant = paramset$parameters$detplant[whichtokeep,]
+    paramset$yeqm = paramset$yeqm[whichtokeep_eqm]
 
-  paramset$parameters$death = paramset$parameters$death[whichtokeep,]
+    paramset$parameters$cij = paramset$parameters$cij[whichtokeep,whichtokeep]
 
-  paramset$parameters$Qmat = paramset$parameters$Qmat[whichtokeep,]
+    paramset$parameters$h = paramset$parameters$h[whichtokeep,whichtokeep]
 
-  paramset$parameters$pmat = paramset$parameters$pmat[whichtokeep,]
+    paramset$parameters$death = paramset$parameters$death[whichtokeep,]
 
-  paramset$parameters$cij = paramset$parameters$cij[whichtokeep,whichtokeep]
+    paramset$parameters$Qmat = paramset$parameters$Qmat[whichtokeep,]
 
-  paramset$parameters$h = paramset$parameters$h[whichtokeep,whichtokeep]
+    paramset$parameters$pmat = paramset$parameters$pmat[whichtokeep,]
 
-  paramset$parameters$cij = paramset$parameters$cij[whichtokeep,whichtokeep]
+    for(EL in colnames(paramset$parameters$Qmat)){
+      paramset$parameters$assimilation[[EL]] = paramset$parameters$assimilation[[EL]][whichtokeep,whichtokeep]
 
+    }
 
-  usin$imat = usin$imat[whichtorm,whichtorm]
+    paramset$parameters$detplant = paramset$parameters$detplant[whichtokeep,]
 
-  for(ii in 1:length(usin$prop$general)){
-    usin$prop$general[[ii]] = subset(usin$prop$general[[ii]], !(usin$prop$general[[ii]]$ID %in% toremove))
+    paramset$parameters$canIMMmat = paramset$parameters$canIMMmat[whichtokeep,]
 
-    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(rownames(usin$imat))))
-    stopifnot(all(sort(usin$prop$general[[ii]]$ID) == sort(colnames(usin$imat))))
+    paramset$parameters$ECarbon = paramset$parameters$ECarbon[whichtokeep]
 
-    usin$prop$assimilation[[ii]] = usin$prop$assimilation[[ii]][whichtorm,whichtorm]
+    paramset$parameters$externalinputs = paramset$parameters$externalinputs[whichtokeep,]
 
+    paramset$parameters$nodeloss = paramset$parameters$nodeloss[whichtokeep,]
+
+    paramset$parameters$eqmStandard = paramset$parameters$eqmStandard[whichtokeep_eqm]
   }
-  return(usin)
+
+  return(paramset)
 }
 
 #' Rename a node in a  community.
