@@ -33,8 +33,7 @@ getPARAMS <- function(usin,
                       functionalresponse = NA,
                       externalinputs = NA,
                       inorganicinputs = NA,
-                      inorganicloss = NA,
-                      returnnet = FALSE){
+                      inorganicloss = NA){
 
   # Set the diet limits if they are not included
   if(any(is.na(DIETLIMITS))){

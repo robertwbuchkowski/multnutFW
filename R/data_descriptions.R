@@ -31,3 +31,15 @@
 #' }
 #' @source Example not based on real empirical data.
 "intro_comm"
+
+#' The very simple 3-species example community produced.
+#'
+#' The community contains 3 nodes and 2 chemical elements.
+#'
+#' @format A list containing the feeding matrix and properties
+#' \describe{
+#'   \item{imat}{The feeding matrix.}
+#'   \item{prop}{A list of property databases for each element. There are two parts to this list. The general part includes parameters at the node level and the assimilation part refers to the feeding-specific assimilation efficiency.}
+#' }
+#' @source Example not based on real empirical data.
+"intro_comm2"

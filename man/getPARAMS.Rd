@@ -13,8 +13,7 @@ getPARAMS(
   functionalresponse = NA,
   externalinputs = NA,
   inorganicinputs = NA,
-  inorganicloss = NA,
-  returnnet = FALSE
+  inorganicloss = NA
 )
 }
 \arguments{

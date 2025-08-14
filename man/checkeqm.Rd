@@ -4,7 +4,7 @@
 \alias{checkeqm}
 \title{Check the carbon flux equilibrium output by comana.}
 \usage{
-checkeqm(usin, eqmtolerance = NA)
+checkeqm(usin, eqmtolerance = 1.5e-08)
 }
 \arguments{
 \item{usin}{The community to assess equilibrium via comana.}

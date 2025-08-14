@@ -344,9 +344,9 @@ renamenode <- function(usin, oldname,newname){
 #' @examples
 #' checkeqm(intro_comm)
 #' @export
-checkeqm <- function(usin, eqmtolerance = NA){
+checkeqm <- function(usin, eqmtolerance = 1.5e-8){
 
   # Use the functionality in the getPARAMS function:
-  !any(getPARAMS(usin = usin, returnnet = TRUE) > 1.5e-8)
+  !any(unname(foodwebode(t = 1, y = getPARAMS(usin)$yeqm, pars = getPARAMS(usin)$parameters)[[1]]) > eqmtolerance)
 
 }
