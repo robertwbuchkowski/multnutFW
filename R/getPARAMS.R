@@ -109,9 +109,8 @@ getPARAMS <- function(usin,
   # Immobilization parameters:
   canIMMmat = sapply(usin$prop$general, FUN = function(X){X$canIMM})
 
-  # Get E parameters: (NOT IN USE ATM)
-  biomass_exrete = (do.call("cbind",comana(usin)$mineralization) -
-    (sapply(usin$prop$general, FUN = function(X){X$p})-1)*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums))
+  # Get E parameters:
+  biomass_exrete = do.call("cbind",comana(usin)$mineralization)
 
   # Confirm net change:
   if(sum(detplant$FecalRecycling ) > 1) stop("FecalRecycling must sum to 1")
