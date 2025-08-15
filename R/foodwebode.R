@@ -9,6 +9,8 @@
 #' @export
 foodwebode <- function(t,y,pars){
 
+  y = pmax(y, 0) # Clamp all values to be positive.
+
   yunstd = y*pars$eqmStandard
 
   biomass = yunstd[1:nrow(pars$pmat)]
@@ -24,7 +26,11 @@ foodwebode <- function(t,y,pars){
   ymat = biomass*Qmat
 
   # Check to make sure the ymat is right:
-  if(!all.equal(unname(ymat[pars$detplant$isDetritus == 1,-1]),unname(Det_stocks))) stop("Error converting detritus nutrients.")
+  if(!all.equal(
+    matrix(unname(ymat[pars$detplant$isDetritus == 1,-1]), nrow = sum(pars$detplant$isDetritus == 1)),
+    unname(matrix(Det_stocks, nrow = sum(pars$detplant$isDetritus == 1)))
+    )
+    ) stop("Error converting detritus nutrients.")
 
   # Calculate the consumption rates:
   predC = matrix(ymat[,1], nrow = nrow(pars$cij), ncol = ncol(pars$cij))
