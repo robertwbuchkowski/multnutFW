@@ -30,9 +30,9 @@ node_flux_view <- function(usin, node = NULL, Element= NULL, mfrow_plot = c(1,1)
 
   ratio = lapply(usin$prop$general, function(X) X$Q)
 
-  ratio = lapply(ratio, function(X) X/X[[1]])
+  ratio2 = lapply(ratio, function(X) X/ratio[[1]]) # X/C
 
-  death = lapply(ratio, function(X) X*death)
+  death = lapply(ratio2, function(X) X*death)
 
   death = lapply(death,
                  replace_inf <- function(x) {
@@ -41,6 +41,16 @@ node_flux_view <- function(usin, node = NULL, Element= NULL, mfrow_plot = c(1,1)
                    return(x)
                  }
   )
+
+  # Test balance:
+  net = do.call("cbind", defication) + do.call("cbind", mineralization) + do.call("cbind", predation) + do.call("cbind", death) - do.call("cbind", consump)
+
+  net = net[TLcheddar(usin$imat) > 1,]
+
+  if(any(net > 1.5e-8)){
+    print(net)
+    warning("Some of the higher trophic levels are not balancing. See net change matrix above to diagnose the issue.")
+  }
 
   graphics::par(mar = c(1, 1, 1, 1)) # Reduce margins
   graphics::par(mfrow = mfrow_plot) # set the plot numbers per panel
