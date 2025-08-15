@@ -112,6 +112,8 @@ getPARAMS <- function(usin,
   # Get E parameters:
   biomass_exrete = do.call("cbind",comana(usin)$mineralization)
 
+  biomass_exrete = biomass_exrete - (1-pmat)*sapply(Map(function(x,y) x*y, comana(usin)$fmat, usin$prop$assimilation), rowSums) # Remove the production efficiency mineralization to avoid double counting.
+
   # Confirm net change:
   if(sum(detplant$FecalRecycling ) > 1) stop("FecalRecycling must sum to 1")
 
