@@ -4,12 +4,7 @@
 \alias{whomineralizes}
 \title{Direct and indirect contributions to mineralizations}
 \usage{
-whomineralizes(
-  usin,
-  elements = "All",
-  selected = NULL,
-  simulation_params = NULL
-)
+whomineralizes(usin, selected = NULL, simulation_params = NULL)
 }
 \arguments{
 \item{usin}{The community in which we want to calculate mineralization rates.}

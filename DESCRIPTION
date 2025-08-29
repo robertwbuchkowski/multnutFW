@@ -14,7 +14,8 @@ Imports:
   lpSolve (>= 5.6.15),
   stats (>= 4.4.0),
   stringr (>= 1.5.1),
-  diagram (>= 1.6.5)
+  diagram (>= 1.6.5),
+  rootSolve (>= 1.8.2.4)
 Depends: 
     R (>= 3.5)
 Suggests: 

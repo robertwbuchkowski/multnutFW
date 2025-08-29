@@ -19,7 +19,7 @@
 #' whomineralizes(intro_comm) # For all nodes
 #' whomineralizes(intro_comm, selected = c("Pred", "Prey1")) # For certain nodes only
 #' @export
-whomineralizes <- function(usin, elements = "All", selected = NULL, simulation_params = NULL){
+whomineralizes <- function(usin, selected = NULL, simulation_params = NULL){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
 
@@ -31,10 +31,6 @@ whomineralizes <- function(usin, elements = "All", selected = NULL, simulation_p
 
   # Remove basal pools for now, because the simulator is not set up for a food web without detritus!
   Nnames = Nnames[!Nnames %in% colnames(usin$imat)[which(TLcheddar(usin$imat) == 1)]]
-
-  if(elements == "All" | elements == "all"){
-    elements = names(usin$prop$general)
-  }
 
   res1 = comana(usin) # Calculate fluxes
 
