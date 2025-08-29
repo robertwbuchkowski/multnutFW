@@ -111,7 +111,7 @@ whomineralizes <- function(usin, selected = NULL, simulation_params = NULL){
       for(Qadj in Q_to_calc){
         curuse = sim_result_eqm_other[which(do.call("c",lapply(curuse_all, function(X) X[[1]])) == Qadj)]
 
-        names(curuse) = do.call("c",lapply(curuse_all, function(X) X[[2]]))
+        names(curuse) = unique(do.call("c",lapply(curuse_all, function(X) X[[2]])))
 
         # Calculate new Q values:
         curuse = curuse/
