@@ -269,9 +269,13 @@ removenodes <- function(usin, toremove){
 removenodes_sim <- function(paramset, toremove){
 
   for(toremove_current in toremove){
-    whichtokeep = !grepl(toremove_current, colnames(paramset$parameters$cij))
 
-    whichtokeep_eqm = !grepl(toremove_current, names(paramset$yeqm))
+    toremove_current = c(toremove_current,
+                         paste0(toremove_current, "_",colnames(paramset$parameters$Qmat)))
+
+    whichtokeep = !(colnames(paramset$parameters$cij) %in% toremove_current)
+
+    whichtokeep_eqm = !(names(paramset$yeqm) %in% toremove_current)
 
     paramset$yeqm = paramset$yeqm[whichtokeep_eqm]
 
