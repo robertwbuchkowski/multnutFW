@@ -4,14 +4,19 @@
 \alias{whomineralizes}
 \title{Direct and indirect contributions to mineralizations}
 \usage{
-whomineralizes(usin, elements = "All", selected = NULL)
+whomineralizes(
+  usin,
+  elements = "All",
+  selected = NULL,
+  simulation_params = NULL
+)
 }
 \arguments{
 \item{usin}{The community in which we want to calculate mineralization rates.}
 
-\item{elements}{The names of the elements that you want to analyze in a vector. The default value "All" calculates mineralization for all of them.}
-
 \item{selected}{A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)}
+
+\item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
 }
 \value{
 A table of node effects on mineralization rates.
@@ -24,13 +29,13 @@ The results are labeled as follows with direct contributions calculated from the
 
 \describe{
   \item{Direct}{The direct contribution to mineralization.}
-  \item{Indirect}{The indirect contribution to mineralization.}
+  \item{Indirect_static}{The indirect contribution to mineralization when the species is removed at equilibrium.}
+  \item{Indirect_dynamic}{The indirect contribution to mineralization when the species is removed and equilibrium is recalculated.}
 }
 The indirect contributions are calculated as the total mineralization of the community with the trophic species minus the trophic species direct mineralization minus the total mineralization without the trophic species all divided by the total mineralizaiton with the trophic species.
 }
 \examples{
 # Basic example for the introductory community:
-whomineralizes(intro_comm) # For all elements
-whomineralizes(intro_comm, element = "Nitrogen") # For a specific element
+whomineralizes(intro_comm) # For all nodes
 whomineralizes(intro_comm, selected = c("Pred", "Prey1")) # For certain nodes only
 }
