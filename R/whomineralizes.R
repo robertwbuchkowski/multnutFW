@@ -3,6 +3,7 @@
 #' @param usin The community in which we want to calculate mineralization rates.
 #' @param selected A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)
 #' @param simulation_params The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.
+#' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.
 #' @return A table of node effects on mineralization rates.
 #' @details
 #' The results are labeled as follows with direct contributions calculated from the full food web and indirect contributions calculated from the food web without that node. Indirect contributions do not include the direct contribution (i.e., it is subtracted).
@@ -19,7 +20,7 @@
 #' whomineralizes(intro_comm) # For all nodes
 #' whomineralizes(intro_comm, selected = c("Pred", "Prey1")) # For certain nodes only
 #' @export
-whomineralizes <- function(usin, selected = NULL, simulation_params = NULL){
+whomineralizes <- function(usin, selected = NULL, simulation_params = NULL, mod_stoich = TRUE){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
 
@@ -107,22 +108,23 @@ whomineralizes <- function(usin, selected = NULL, simulation_params = NULL){
 
       usinmod_dynamic$prop$general$Carbon$B = unname(sim_result_eqm_C)
 
-      curuse_all = strsplit(names(sim_result_eqm_other), "_")
-      for(Qadj in Q_to_calc){
-        curuse = sim_result_eqm_other[which(do.call("c",lapply(curuse_all, function(X) X[[1]])) == Qadj)]
+      if(mod_stoich){
+        curuse_all = strsplit(names(sim_result_eqm_other), "_")
+        for(Qadj in Q_to_calc){
+          curuse = sim_result_eqm_other[which(do.call("c",lapply(curuse_all, function(X) X[[1]])) == Qadj)]
 
-        names(curuse) = unique(do.call("c",lapply(curuse_all, function(X) X[[2]])))
+          names(curuse) = unique(do.call("c",lapply(curuse_all, function(X) X[[2]])))
 
-        # Calculate new Q values:
-        curuse = curuse/
-          (usinmod_dynamic$prop$general$Carbon$B* # Notice that biomass already adjusted to new value...
-             usinmod_dynamic$prop$general$Carbon$Q)[usinmod_dynamic$prop$general$Carbon$ID == Qadj]
+          # Calculate new Q values:
+          curuse = curuse/
+            (usinmod_dynamic$prop$general$Carbon$B* # Notice that biomass already adjusted to new value...
+               usinmod_dynamic$prop$general$Carbon$Q)[usinmod_dynamic$prop$general$Carbon$ID == Qadj]
 
-        for(el in names(curuse)){
-          usinmod_dynamic$prop$general[[el]]$Q[usinmod_dynamic$prop$general[[el]]$ID == Qadj] = unname(curuse[el])
+          for(el in names(curuse)){
+            usinmod_dynamic$prop$general[[el]]$Q[usinmod_dynamic$prop$general[[el]]$ID == Qadj] = unname(curuse[el])
+          }
         }
       }
-
 
       res3 = comana(usinmod_dynamic)
 

@@ -4,7 +4,12 @@
 \alias{whomineralizes}
 \title{Direct and indirect contributions to mineralizations}
 \usage{
-whomineralizes(usin, selected = NULL, simulation_params = NULL)
+whomineralizes(
+  usin,
+  selected = NULL,
+  simulation_params = NULL,
+  mod_stoich = TRUE
+)
 }
 \arguments{
 \item{usin}{The community in which we want to calculate mineralization rates.}
@@ -12,6 +17,8 @@ whomineralizes(usin, selected = NULL, simulation_params = NULL)
 \item{selected}{A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)}
 
 \item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
+
+\item{mod_stoich}{Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.}
 }
 \value{
 A table of node effects on mineralization rates.
