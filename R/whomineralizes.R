@@ -117,7 +117,7 @@ whomineralizes <- function(usin, selected = NULL, simulation_params = NULL, mod_
 
           # Calculate new Q values:
           curuse = curuse/
-            (usinmod_dynamic$prop$general$Carbon$B* # Notice that biomass already adjusted to new value...
+            (usinmod_dynamic$prop$general$Carbon$B/ # Notice that biomass already adjusted to new value...
                usinmod_dynamic$prop$general$Carbon$Q)[usinmod_dynamic$prop$general$Carbon$ID == Qadj]
 
           for(el in names(curuse)){
