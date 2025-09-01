@@ -9,7 +9,7 @@
 #' @export
 foodwebode <- function(t,y,pars){
 
-  y = pmax(y, 0) # Clamp all values to be positive.
+  if(pars$forcepositive == 1) y = pmax(y, 0) # Clamp all values to be positive.
 
   yunstd = y*pars$eqmStandard
 

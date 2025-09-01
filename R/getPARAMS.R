@@ -9,6 +9,7 @@
 #' @param externalinputs A matrix of parameters with the rows being the nodes in the food web and the columns being the chemical elements. NA means not inputs except the detritus input necessary to meet food web demand.
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
+#' @param forcepositive A TRUE/FALSE parameter that determine if the system of equations zeros any negative pools at each time step. This can be helpful for simulations of complex systems.
 #' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
@@ -33,7 +34,8 @@ getPARAMS <- function(usin,
                       functionalresponse = NA,
                       externalinputs = NA,
                       inorganicinputs = NA,
-                      inorganicloss = NA){
+                      inorganicloss = NA,
+                      forcepositive = FALSE){
 
   # Set the diet limits if they are not included
   if(any(is.na(DIETLIMITS))){
@@ -238,6 +240,7 @@ getPARAMS <- function(usin,
                      nodeloss = nodeloss,
                      inorganicinputs = inorganicinputs,
                      inorganicloss = inorganicloss,
-                     eqmStandard = yeqm)))
+                     eqmStandard = yeqm,
+                     forcepositive = ifelse(forcepositive, 1,0))))
 
 }
