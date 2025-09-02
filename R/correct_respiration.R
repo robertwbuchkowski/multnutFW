@@ -89,6 +89,8 @@ correct_respiration = function(usin, output_type = TRUE, biomass_weight_preferen
 
   solution = base::solve(temp_mat,bvec)
 
+  if(any(solution < 0)) stop("Correction was unsuccessful. This is likely because cannibalism is too large in one of the populations, thus making increased carbon loss impossible to maintain.")
+
   # Confirm that this solution is unique by showing Ax = 0 produces x = 0
   if(any(solve(temp_mat,rep(0, Nnodes + length(species))) != 0)){
     warning("Solution to the web is not unique!")
