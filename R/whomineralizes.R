@@ -5,6 +5,7 @@
 #' @param simulation_params The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.
 #' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.
 #' @param extinct_threshold The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.
+#' @param n_sim_trials The number of trial starting vectors used for the simulation of indirect effects. Larger numbers means slower execution and greater chance of finding equilibria.
 #' @return A table of node effects on mineralization rates.
 #' @details
 #' The results are labeled as follows with direct contributions calculated from the full food web and indirect contributions calculated from the food web without that node. Indirect contributions do not include the direct contribution (i.e., it is subtracted).
@@ -25,7 +26,8 @@ whomineralizes <- function(usin,
                            selected = NULL,
                            simulation_params = NULL,
                            mod_stoich = TRUE,
-                           extinct_threshold = 1.5e-8){
+                           extinct_threshold = 1.5e-8,
+                           n_sim_trials = 50){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
 
@@ -94,8 +96,8 @@ whomineralizes <- function(usin,
       sim_par_mod = removenodes_sim(simulation_params, toremove = rmnode)
 
       # Try multiple starting points:
-      outputsave = vector('list', 50)
-      for(trial in 1:50){
+      outputsave = vector('list', n_sim_trials)
+      for(trial in 1:n_sim_trials){
         tempout = tryCatch(rootSolve::stode(
           y = sim_par_mod$yeqm*runif(length(sim_par_mod$yeqm), min = 0.1, max = 10),
           func = foodwebode,

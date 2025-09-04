@@ -9,7 +9,8 @@ whomineralizes(
   selected = NULL,
   simulation_params = NULL,
   mod_stoich = TRUE,
-  extinct_threshold = 1.5e-08
+  extinct_threshold = 1.5e-08,
+  n_sim_trials = 50
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ whomineralizes(
 \item{mod_stoich}{Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.}
 
 \item{extinct_threshold}{The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.}
+
+\item{n_sim_trials}{The number of trial starting vectors used for the simulation of indirect effects. Larger numbers means slower execution and greater chance of finding equilibria.}
 }
 \value{
 A table of node effects on mineralization rates.
