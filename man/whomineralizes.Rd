@@ -8,7 +8,8 @@ whomineralizes(
   usin,
   selected = NULL,
   simulation_params = NULL,
-  mod_stoich = TRUE
+  mod_stoich = TRUE,
+  extinct_threshold = 1.5e-08
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ whomineralizes(
 \item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
 
 \item{mod_stoich}{Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.}
+
+\item{extinct_threshold}{The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.}
 }
 \value{
 A table of node effects on mineralization rates.

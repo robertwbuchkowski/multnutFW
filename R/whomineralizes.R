@@ -4,6 +4,7 @@
 #' @param selected A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)
 #' @param simulation_params The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.
 #' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.
+#' @param extinct_threshold The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.
 #' @return A table of node effects on mineralization rates.
 #' @details
 #' The results are labeled as follows with direct contributions calculated from the full food web and indirect contributions calculated from the food web without that node. Indirect contributions do not include the direct contribution (i.e., it is subtracted).
@@ -20,7 +21,11 @@
 #' whomineralizes(intro_comm) # For all nodes
 #' whomineralizes(intro_comm, selected = c("Pred", "Prey1")) # For certain nodes only
 #' @export
-whomineralizes <- function(usin, selected = NULL, simulation_params = NULL, mod_stoich = TRUE){
+whomineralizes <- function(usin,
+                           selected = NULL,
+                           simulation_params = NULL,
+                           mod_stoich = TRUE,
+                           extinct_threshold = 1.5e-8){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
 
@@ -85,70 +90,108 @@ whomineralizes <- function(usin, selected = NULL, simulation_params = NULL, mod_
     # Calculate dynamic indirect effect if requested:
 
     if(!is.null(simulation_params)){
+
       sim_par_mod = removenodes_sim(simulation_params, toremove = rmnode)
-      sim_result = rootSolve::runsteady(y = sim_par_mod$yeqm,
-                           func = foodwebode,
-                           parms = sim_par_mod$parameters)
 
-      if(!attr(sim_result, "steady")) warning(paste("Simulation for the indirect effect of", rmnode, "not converging. Results may be wrong."))
+      # Try multiple starting points:
+      outputsave = vector('list', 50)
+      for(trial in 1:50){
+        tempout = tryCatch(rootSolve::stode(
+          y = sim_par_mod$yeqm*runif(length(sim_par_mod$yeqm), min = 0.1, max = 10),
+          func = foodwebode,
+          parms = sim_par_mod$parameters),
+          error = function(e) NULL)
 
-      # Calculate the new equilibrium
-      sim_result_eqm = sim_result$y*sim_par_mod$parameters$eqmStandard
-
-      sim_result_eqm_C = sim_result_eqm[!grepl("_",names(sim_result_eqm))]
-
-      sim_result_eqm_other = sim_result_eqm[grepl("_",names(sim_result_eqm))]
-
-      Q_to_calc = unique(do.call("c",lapply(strsplit(names(sim_result_eqm_other), "_"), function(X) X[[1]])))
-
-
-      usinmod_dynamic = usinmod
-
-      if(!all(names(sim_result_eqm_C) == usinmod_dynamic$prop$general$Carbon$ID)) stop("Name swapping occuring. Check code.")
-
-      usinmod_dynamic$prop$general$Carbon$B = unname(sim_result_eqm_C)
-
-      if(mod_stoich){
-        curuse_all = strsplit(names(sim_result_eqm_other), "_")
-        for(Qadj in Q_to_calc){
-          curuse = sim_result_eqm_other[which(do.call("c",lapply(curuse_all, function(X) X[[1]])) == Qadj)]
-
-          names(curuse) = unique(do.call("c",lapply(curuse_all, function(X) X[[2]])))
-
-          # Calculate new Q values:
-          curuse = curuse/
-            (usinmod_dynamic$prop$general$Carbon$B/ # Notice that biomass already adjusted to new value...
-               usinmod_dynamic$prop$general$Carbon$Q)[usinmod_dynamic$prop$general$Carbon$ID == Qadj]
-
-          for(el in names(curuse)){
-            usinmod_dynamic$prop$general[[el]]$Q[usinmod_dynamic$prop$general[[el]]$ID == Qadj] = unname(curuse[el])
+        if(!is.null(tempout)){
+          if(attr(tempout, "steady")){
+            outputsave[[trial]] = tempout
           }
         }
       }
 
-      res3 = comana(usinmod_dynamic)
+      outputsave = do.call("rbind",lapply(outputsave, function(X) X$y))
 
-      # Calculate indirect effect on each element:
-      mindf_mod = as.data.frame(res3$mineralization)
-      colnames(mindf_mod) = paste0("min_",colnames(mindf_mod))
+      # Remove equilibria that depend on large negative pools.
+      outputsave = outputsave[apply(outputsave, 1, min) > -1.5e-8,]
 
-      indirect_dynamic_min = colSums(mindf) - # Flux with the node
-        mindf[rmnode,] - # Direct effect of the node
-        colSums(mindf_mod) # Flux without the node
+      if(dim(outputsave)[1] == 0) stop(paste("Simulation for the indirect effect of", rmnode, "not converging. Results may be wrong."))
 
-      rownames(indirect_dynamic_min) = NULL
+      outputsave = outputsave[!duplicated(round(outputsave, digits = 4)),]
 
-      output_indirect_dynamic[[rmnode]] = cbind(
-        data.frame(basal_C_consump = sum(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1]) - # Flux with the node
-                     - sum(res1$fmat$Carbon[rmnode,TLcheddar(usin$imat) == 1]) - # Direct effect of the node
-                     sum(res3$fmat$Carbon[,TLcheddar(usinmod$imat) == 1]) # Flux without the node
-        ),
-        indirect_dynamic_min
-      )
+      outputsave[outputsave < extinct_threshold] = 0
+
+      coextinct = apply(outputsave,1,min) < extinct_threshold
+
+      indirect_dynamic_min = vector(mode = "list", length = dim(outputsave)[1])
+
+      for(new_eqm in 1:dim(outputsave)[1]){
+        # Calculate the new equilibrium
+        sim_result_eqm = outputsave[new_eqm,]*sim_par_mod$parameters$eqmStandard
+
+        sim_result_eqm_C = sim_result_eqm[!grepl("_",names(sim_result_eqm))]
+
+        sim_result_eqm_other = sim_result_eqm[grepl("_",names(sim_result_eqm))]
+
+        Q_to_calc = unique(do.call("c",lapply(strsplit(names(sim_result_eqm_other), "_"), function(X) X[[1]])))
 
 
+        usinmod_dynamic = usinmod
+
+        if(!all(names(sim_result_eqm_C) == usinmod_dynamic$prop$general$Carbon$ID)) stop("Name swapping occuring. Check code.")
+
+        usinmod_dynamic$prop$general$Carbon$B = unname(sim_result_eqm_C)
+
+        if(mod_stoich){
+          curuse_all = strsplit(names(sim_result_eqm_other), "_")
+          for(Qadj in Q_to_calc){
+            curuse = sim_result_eqm_other[which(do.call("c",lapply(curuse_all, function(X) X[[1]])) == Qadj)]
+
+            names(curuse) = unique(do.call("c",lapply(curuse_all, function(X) X[[2]])))
+
+            # Calculate new Q values:
+            curuse = curuse/
+              (usinmod_dynamic$prop$general$Carbon$B/ # Notice that biomass already adjusted to new value...
+                 usinmod_dynamic$prop$general$Carbon$Q)[usinmod_dynamic$prop$general$Carbon$ID == Qadj]
+
+            for(el in names(curuse)){
+              usinmod_dynamic$prop$general[[el]]$Q[usinmod_dynamic$prop$general[[el]]$ID == Qadj] = unname(curuse[el])
+            }
+          }
+        }
+
+        res3 = comana(usinmod_dynamic)
+
+        # Calculate indirect effect on each element:
+        mindf_mod = as.data.frame(res3$mineralization)
+        colnames(mindf_mod) = paste0("min_",colnames(mindf_mod))
+
+        indirect_dynamic_min[[new_eqm]] = colSums(mindf) - # Flux with the node
+          mindf[rmnode,] - # Direct effect of the node
+          colSums(mindf_mod) # Flux without the node
+
+        rownames(indirect_dynamic_min) = NULL
+
+        indirect_dynamic_min[[new_eqm]] = cbind(
+          data.frame(basal_C_consump = sum(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1]) - # Flux with the node
+                       - sum(res1$fmat$Carbon[rmnode,TLcheddar(usin$imat) == 1]) - # Direct effect of the node
+                       sum(res3$fmat$Carbon[,TLcheddar(usinmod$imat) == 1]) # Flux without the node
+          ),
+          indirect_dynamic_min[[new_eqm]]
+        )
+
+      }
+      indirect_dynamic = cbind(outputsave, do.call("rbind", indirect_dynamic_min))
+
+      rownames(indirect_dynamic) = NULL
+
+      indirect_dynamic = cbind(indirect_dynamic, NAME = 0)
+
+      colnames(indirect_dynamic)[colnames(indirect_dynamic) == "NAME"] = rmnode
+
+      indirect_dynamic = cbind(indirect_dynamic, Coextinction = coextinct)
+
+      output_indirect_dynamic[[rmnode]] = cbind(indirect_dynamic, ID = rmnode)
     }
-
   }
 
   # Clean up data for export:
@@ -167,15 +210,9 @@ whomineralizes <- function(usin, selected = NULL, simulation_params = NULL, mod_
   if(!is.null(simulation_params)){
     output_indirect_dynamic = do.call("rbind",output_indirect_dynamic)
 
-    output_indirect_dynamic$ID = rownames(output_indirect_dynamic)
-
-    output_indirect_dynamic$consump = NA
-
     rownames(output_indirect_dynamic) = NULL
 
-    output_indirect_dynamic$Effect = "Indirect dynamic"
-
-    output = rbind(rbind(output_direct, output_indirect_static),output_indirect_dynamic)
+    output = list(static = rbind(output_direct, output_indirect_static), dynamic = output_indirect_dynamic)
   }else{
     output = rbind(output_direct, output_indirect_static)
   }
