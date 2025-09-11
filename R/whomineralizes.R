@@ -104,9 +104,16 @@ whomineralizes <- function(usin,
           parms = sim_par_mod$parameters),
           error = function(e) NULL)
 
-        if(!is.null(tempout)){
-          if(attr(tempout, "steady")){
-            outputsave[[trial]] = tempout
+        if(!is.null(tempout)){ # Confirm there is an equilibrium
+          if(attr(tempout, "steady")){ # Confirm stable
+            eq_point <- tempout$y # Pull point
+            jac <- jacobian.full(eq_point, func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
+
+            eigenvalues <- eigen(jac)$values
+
+            if(all(Re(eigenvalues) < 0)){
+              outputsave[[trial]] = tempout
+            }
           }
         }
       }
