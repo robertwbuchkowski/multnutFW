@@ -10,7 +10,8 @@
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param forcepositive A TRUE/FALSE parameter that determine if the system of equations zeros any negative pools at each time step. This can be helpful for simulations of complex systems.
-#' @return A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
+#' @param tracer Should a tracer for carbon be included in the model? If default NA, then there is no tracer. Otherwise, a data frame that has the number of rows to match the number of nodes in the food web and two columns. The first column contains the input proportions of carbon, while the second contains the biomass proportions of carbon.
+#' @return A list with two elements:(1) a vector of equilibrium biomasses that can be modified and passed to the simulator, and (2) a vector of parameters to run the model away from equilibrium.
 #' @details
 #' A function to get the parameters of a food web model for simulation purposes. It does not correct stoichiometry, so the user must do this beforehand if they want.
 #' For external inputs, Non-zero inputs should match the stoichiometry of non-detritus pools. Detritus inputs should meet demands of the food web if provided.
@@ -35,7 +36,8 @@ getPARAMS <- function(usin,
                       externalinputs = NA,
                       inorganicinputs = NA,
                       inorganicloss = NA,
-                      forcepositive = FALSE){
+                      forcepositive = FALSE,
+                      tracer = NA){
 
   # Set the diet limits if they are not included
   if(any(is.na(DIETLIMITS))){
@@ -223,7 +225,26 @@ getPARAMS <- function(usin,
 
   colnames(externalinputs) = colnames(nodeloss) = names(inorganicinputs) = names(inorganicloss) = colnames(Qmat)
 
+  if(!any(is.na(tracer))){
 
+    if(length(biomass) != dim(tracer)[1]) stop("Tracer data frame needs to have the same number of rows as the community.")
+
+    if(dim(tracer)[2] != 2) stop("Tracer data frame needs to have two columns.")
+
+    eqm_proportions = tracer[,2]
+
+    tracer = tracer[,1]*externalinputs[,1]
+
+    if(any((externalinputs[,1] == 0) != (tracer ==0))) warning("Tracer is coded as zero input for inputs that are positive.")
+
+    names(tracer) = usin$prop$general$Carbon$ID
+
+    eqm_tracer = eqm_proportions*biomass
+
+    names(eqm_tracer) = paste0(usin$prop$general$Carbon$ID, "_tracer")
+
+    yeqm = c(yeqm, eqm_tracer)
+  }
 
   return(list(yeqm = yeqm/yeqm,
               parameters =
@@ -240,7 +261,8 @@ getPARAMS <- function(usin,
                      nodeloss = nodeloss,
                      inorganicinputs = inorganicinputs,
                      inorganicloss = inorganicloss,
-                     eqmStandard = yeqm,
-                     forcepositive = ifelse(forcepositive, 1,0))))
+                     forcepositive = ifelse(forcepositive, 1,0),
+                     tracer = tracer,
+                     eqmStandard = yeqm)))
 
 }

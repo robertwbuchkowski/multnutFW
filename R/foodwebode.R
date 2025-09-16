@@ -46,32 +46,56 @@ foodwebode <- function(t,y,pars){
 
   rm(predC, preyC, consumption_Carbon)
 
-  netwithoutmineralization =
+  #============================#
+  # Calculate individual fluxes:
+  #============================#
 
-    # Gains from outside the system:
-    pars$externalinputs -
+  # Gains from outside the system:
+  fluxIO = pars$externalinputs
 
-    # Loss from detritus:
-    pars$nodeloss*ymat +
+  # Loss from detritus:
+  fluxOI = pars$nodeloss*ymat
 
-    # Gains from consumption:
-    pars$pmat*sapply(Map(function(XX,YY) XX*YY, consumption, pars$assimilation), rowSums) -
-    # Losses from predation:
-    sapply(consumption, colSums) -
-    # Natural death:
-    matrix(pars$death[,1]*(1-pars$death[,3])*ymat[,1] + # density-independent
-             pars$death[,2]*(pars$death[,3])*ymat[,1]*ymat[,1], # density-dependent
-           nrow = nrow(ymat), ncol = ncol(ymat))*Qmat +
-    # Detritus recycling:
-    matrix(pars$detplant$FecalRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
+  # Gains from consumption:
+  fluxCONSUMP = pars$pmat*sapply(Map(function(XX,YY) XX*YY, consumption, pars$assimilation), rowSums)
+
+  # Losses from predation:
+  fluxPRED = sapply(consumption, colSums)
+
+  # Natural death:
+  fluxDEATH = matrix(pars$death[,1]*(1-pars$death[,3])*ymat[,1] + # density-independent
+                       pars$death[,2]*(pars$death[,3])*ymat[,1]*ymat[,1], # density-dependent
+                     nrow = nrow(ymat), ncol = ncol(ymat))*Qmat
+
+  # Detritus recycling:
+  fluxFAECES = matrix(pars$detplant$FecalRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
     matrix(
       colSums(sapply(Map(function(XX,YY) XX*YY, consumption, lapply(pars$assimilation, function(X) 1 - X)), rowSums)), # A vector of unassimilated material (i.e., faeces)
-      nrow = nrow(ymat), ncol = ncol(ymat),byrow = T) +
-    matrix(pars$detplant$NecromassRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
+      nrow = nrow(ymat), ncol = ncol(ymat),byrow = T)
+
+  fluxCARCASS = matrix(pars$detplant$NecromassRecycling, nrow = nrow(ymat), ncol = ncol(ymat))* # A matrix to allocate the detritus recycling appropriately
     matrix(
       colSums(matrix(pars$death[,1]*(1-pars$death[,3])*ymat[,1] + # density-independent death
                        pars$death[,2]*pars$death[,3]*ymat[,1]*ymat[,1], nrow = nrow(ymat), ncol = ncol(ymat))*Qmat), # density-dependent death
       nrow = nrow(ymat), ncol = ncol(ymat),byrow = T) # arrange in a matrix by row so that the elements are in the columns.
+
+  #============================================#
+  # Calculate net fluxes without mineralization:
+  #============================================#
+  netwithoutmineralization =
+    # Gains from outside the system:
+    fluxIO -
+    # Loss from detritus:
+    fluxOI +
+    # Gains from consumption:
+    fluxCONSUMP -
+    # Losses from predation:
+    fluxPRED -
+    # Natural death:
+    fluxDEATH +
+    # Detritus recycling:
+    fluxFAECES +
+    fluxCARCASS
 
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
     immobilization = -pars$canIMMmat*netwithoutmineralization
@@ -160,14 +184,73 @@ foodwebode <- function(t,y,pars){
 
   D_element_biomass = (netwithmineralization[which(pars$detplant$isDetritus == 1),-1])
 
-  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
-    names(dy) = names(y)
-    return(list(dy, dinorganic = dinorganic))
+
+  #===========================#
+  #  Conduct tracer analysis  #
+  #===========================#
+
+  if(!any(is.na(pars$tracer))){
+
+    # Calculate the carbon proportion in the tracer:
+    tracer13C = yunstd[
+      (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + 1):
+        (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + nrow(pars$pmat))]/ymat[,1]
+
+    if(any(tracer13C > 1)) stop("Tracer should not be able to exceed 100% of the the pool size, but is during this simulation.")
+
+    fluxTCONSUMP = consumption[[1]]*
+      matrix(tracer13C, nrow = nrow(consumption[[1]]), ncol = ncol(consumption[[1]]), byrow = T)
+    fluxTPRED = fluxPRED[,1]*tracer13C
+    fluxTDEATH = fluxDEATH[,1]*tracer13C
+    fluxTCARCASS = pars$detplant$NecromassRecycling*sum(fluxTDEATH)
+
+    fluxTCONSUMPSUM = rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
+    fluxTFAECES = pars$detplant$FecalRecycling*sum((1-pars$assimilation$Carbon)*fluxTCONSUMP)
+
+    fluxTLOSS = fluxOI[,1]*tracer13C
+
+    fluxTINPUT = pars$tracer
+
+    fluxTRESP = actualresp*tracer13C*1 # Can put fractionation here.
+
+    # Net tracer fluxes throughout the food web:
+    nettracer =
+      # Gains from outside the system:
+      fluxTINPUT -
+      # Loss from detritus:
+      fluxTLOSS +
+      # Gains from consumption:
+      fluxTCONSUMPSUM -
+      # Losses from predation:
+      fluxTPRED -
+      # Natural death:
+      fluxTDEATH +
+      # Detritus recycling:
+      fluxTFAECES +
+      fluxTCARCASS + # positive b/c resp already negative
+      # Respiration loss:
+      fluxTRESP
+
+    if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
+      dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
+      names(dy) = names(y)
+      return(list(dy, dinorganic = dinorganic))
+    }else{
+      stop("not working yet")
+      dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
+      names(dy) = names(y)
+      return(list(dy))
+    }
   }else{
-    stop("not working yet")
-    dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
-    names(dy) = names(y)
-    return(list(dy))
+    if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
+      dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
+      names(dy) = names(y)
+      return(list(dy, dinorganic = dinorganic))
+    }else{
+      stop("not working yet")
+      dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
+      names(dy) = names(y)
+      return(list(dy))
+    }
   }
-}
+  }
