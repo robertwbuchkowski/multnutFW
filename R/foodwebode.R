@@ -196,7 +196,7 @@ foodwebode <- function(t,y,pars){
       (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + 1):
         (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + nrow(pars$pmat))]/ymat[,1]
 
-    if(any(tracer13C > 1)) stop("Tracer should not be able to exceed 100% of the the pool size, but is during this simulation.")
+    if(any(tracer13C > 1)) warning("Tracer should not be able to exceed 100% of the the pool size, but is during this simulation.")
 
     fluxTCONSUMP = consumption[[1]]*
       matrix(tracer13C, nrow = nrow(consumption[[1]]), ncol = ncol(consumption[[1]]), byrow = T)
@@ -204,7 +204,7 @@ foodwebode <- function(t,y,pars){
     fluxTDEATH = fluxDEATH[,1]*tracer13C
     fluxTCARCASS = pars$detplant$NecromassRecycling*sum(fluxTDEATH)
 
-    fluxTCONSUMPSUM = rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
+    fluxTCONSUMPSUM = pars$pmat[,1]*rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
     fluxTFAECES = pars$detplant$FecalRecycling*sum((1-pars$assimilation$Carbon)*fluxTCONSUMP)
 
     fluxTLOSS = fluxOI[,1]*tracer13C
