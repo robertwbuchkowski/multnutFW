@@ -99,7 +99,7 @@ whomineralizes <- function(usin,
       outputsave = vector('list', n_sim_trials)
       for(trial in 1:n_sim_trials){
         tempout = tryCatch(rootSolve::stode(
-          y = sim_par_mod$yeqm*runif(length(sim_par_mod$yeqm), min = 0.1, max = 10),
+          y = sim_par_mod$yeqm*stats::runif(length(sim_par_mod$yeqm), min = 0.1, max = 10),
           func = foodwebode,
           parms = sim_par_mod$parameters),
           error = function(e) NULL)
@@ -107,7 +107,7 @@ whomineralizes <- function(usin,
         if(!is.null(tempout)){ # Confirm there is an equilibrium
           if(attr(tempout, "steady")){ # Confirm stable
             eq_point <- tempout$y # Pull point
-            jac <- jacobian.full(eq_point, func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
+            jac <- rootSolve::jacobian.full(eq_point, func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
 
             eigenvalues <- eigen(jac)$values
 

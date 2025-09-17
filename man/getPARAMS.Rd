@@ -14,7 +14,8 @@ getPARAMS(
   externalinputs = NA,
   inorganicinputs = NA,
   inorganicloss = NA,
-  forcepositive = FALSE
+  forcepositive = FALSE,
+  tracer = NA
 )
 }
 \arguments{
@@ -37,9 +38,11 @@ getPARAMS(
 \item{inorganicloss}{A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
 
 \item{forcepositive}{A TRUE/FALSE parameter that determine if the system of equations zeros any negative pools at each time step. This can be helpful for simulations of complex systems.}
+
+\item{tracer}{Should a tracer for carbon be included in the model? If default NA, then there is no tracer. Otherwise, a data frame that has the number of rows to match the number of nodes in the food web and two columns. The first column contains the input proportions of carbon, while the second contains the biomass proportions of carbon.}
 }
 \value{
-A list with two elements: (1) a vector of parameters to run the model away from equilibrium and (2) a vector of equilibrium biomasses that can be modified and passed to the simulator.
+A list with two elements:(1) a vector of equilibrium biomasses that can be modified and passed to the simulator, and (2) a vector of parameters to run the model away from equilibrium.
 }
 \description{
 A function to get the parameters for a food web model.
