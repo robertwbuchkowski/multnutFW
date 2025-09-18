@@ -213,6 +213,8 @@ foodwebode <- function(t,y,pars){
 
     fluxTRESP = actualresp*tracer13C*1 # Can put fractionation here.
 
+    fluxTRESPtotal = -fluxTRESP + (1-pars$pmat[,1])*rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
+
     # Net tracer fluxes throughout the food web:
     nettracer =
       # Gains from outside the system:
@@ -234,7 +236,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic))
+      return(list(dy, dinorganic = dinorganic, actualresp = actualresp, fluxTRESPtotal = fluxTRESPtotal))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
@@ -245,7 +247,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic))
+      return(list(dy, dinorganic = dinorganic, actualresp = actualresp))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
