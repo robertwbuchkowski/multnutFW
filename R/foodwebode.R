@@ -163,6 +163,8 @@ foodwebode <- function(t,y,pars){
   # Remove detritus respiration if created:
   actualresp[which(pars$detplant$isDetritus == 1)] = 0
 
+  totalrespsave = -actualresp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
+
   netwithrespiration = netwithoutmineralization + # Positive because respiration is already negative.
     matrix(c(actualresp, rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
 
@@ -236,7 +238,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, actualresp = actualresp, fluxTRESPtotal = fluxTRESPtotal))
+      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, fluxTRESPtotal = fluxTRESPtotal))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
@@ -247,7 +249,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, actualresp = actualresp))
+      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
