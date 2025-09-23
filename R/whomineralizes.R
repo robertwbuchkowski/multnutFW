@@ -3,7 +3,7 @@
 #' @param usin The community in which we want to calculate mineralization rates.
 #' @param selected A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)
 #' @param simulation_params The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.
-#' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilbrium? TRUE or FALSE.
+#' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilibrium? TRUE or FALSE.
 #' @param extinct_threshold The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.
 #' @param n_sim_trials The number of trial starting vectors used for the simulation of indirect effects. Larger numbers means slower execution and greater chance of finding equilibria.
 #' @return A table of node effects on mineralization rates.
@@ -27,7 +27,7 @@ whomineralizes <- function(usin,
                            simulation_params = NULL,
                            mod_stoich = TRUE,
                            extinct_threshold = 1.5e-8,
-                           n_sim_trials = 50){
+                           n_sim_trials = 200){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
 
