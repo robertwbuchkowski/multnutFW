@@ -8,6 +8,7 @@ whomineralizes(
   usin,
   selected = NULL,
   simulation_params = NULL,
+  simulation_time = NA,
   mod_stoich = TRUE,
   extinct_threshold = 1.5e-08,
   n_sim_trials = 200
@@ -19,6 +20,8 @@ whomineralizes(
 \item{selected}{A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)}
 
 \item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
+
+\item{simulation_time}{How long should the simulation last. Default of searches for stable equilibrium, if they exist.}
 
 \item{mod_stoich}{Should the simulation modify the nutrient content of detritus based on the new simulated equilibrium? TRUE or FALSE.}
 
