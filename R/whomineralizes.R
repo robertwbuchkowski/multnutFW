@@ -235,7 +235,16 @@ whomineralizes <- function(usin,
 
         colnames(indirect_dynamic) <- gsub("dinorganic\\.", "min_", colnames(indirect_dynamic))
 
+        basal_C_consump_dynamic = rep(NA,length(1:simulation_time))
 
+        for(i in 1:simulation_time){
+          cur_time = outputsave[i,,drop = F]
+          cur_consumption = sim_par_mod$parameters$cij
+
+          basal_C_consump_dynamic[i] = sum(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1]) - # Flux with the node
+            - sum(res1$fmat$Carbon[rmnode,TLcheddar(usin$imat) == 1]) - # Direct effect of the node
+            sum((cur_consumption*matrix(data = cur_time[1,colnames(cur_time) %in% colnames(cur_consumption)], nrow = ncol(cur_consumption),ncol = ncol(cur_consumption))*matrix(data = cur_time[1,colnames(cur_time) %in% colnames(cur_consumption)], nrow = ncol(cur_consumption),ncol = ncol(cur_consumption), byrow = T))[,TLcheddar(sim_par_mod$parameters$cij) == 1]) # Flux without the node
+        }
 
         output_indirect_dynamic[[rmnode]] =
           cbind(
@@ -243,7 +252,7 @@ whomineralizes <- function(usin,
               cbind(
                 indirect_dynamic, ID = rmnode),
               outputsave[,!grepl("totalrespsave", colnames(outputsave)) & !grepl("dinorganic", colnames(outputsave))]),
-            NAME = 0)
+            NAME = 0, basal_C_consump = basal_C_consump_dynamic)
 
                                                   colnames(output_indirect_dynamic[[rmnode]])[colnames(output_indirect_dynamic[[rmnode]]) == "NAME"] = rmnode
       }
