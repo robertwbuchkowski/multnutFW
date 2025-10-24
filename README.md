@@ -17,7 +17,7 @@ You can install the development version of multnutFW from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("robertwbuchkowski/multnutFW@development")
+devtools::install_github("robertwbuchkowski/multnutFW@main")
 ```
 
 ## Example
@@ -35,12 +35,13 @@ intro_analysis = comana(intro_comm)
 
 # The analysis is run on the food web included in the package with this feeding matrix:
 intro_comm$imat
-#>          Pred     Prey1      Prey2  Microbe1  Detritus
-#> Pred        0 0.5714286 0.42857143 0.0000000 0.0000000
-#> Prey1       0 0.0000000 0.04761905 0.0000000 0.9523810
-#> Prey2       0 0.0000000 0.00000000 0.1666667 0.8333333
-#> Microbe1    0 0.0000000 0.00000000 0.0000000 1.0000000
-#> Detritus    0 0.0000000 0.00000000 0.0000000 0.0000000
+#>          Pred     Prey1      Prey2  Microbe1  Detritus     Plant
+#> Pred        0 0.5714286 0.42857143 0.0000000 0.0000000 0.0000000
+#> Prey1       0 0.0000000 0.01960784 0.0000000 0.3921569 0.5882353
+#> Prey2       0 0.0000000 0.00000000 0.1666667 0.8333333 0.0000000
+#> Microbe1    0 0.0000000 0.00000000 0.0000000 1.0000000 0.0000000
+#> Detritus    0 0.0000000 0.00000000 0.0000000 0.0000000 0.0000000
+#> Plant       0 0.0000000 0.00000000 0.0000000 0.0000000 0.0000000
 
 # The introductory community has 4 chemical elements:
 names(intro_comm$prop)
@@ -53,8 +54,8 @@ in units of carbon.
 
 ``` r
 intro_analysis$consumption
-#>       Pred      Prey1      Prey2   Microbe1   Detritus 
-#>  0.1967213 38.3267880 10.3542095  8.4071270  2.0700000
+#>        Pred       Prey1       Prey2    Microbe1    Detritus       Plant 
+#>   0.1967213  44.3467023   8.2307829   7.9647464 -25.5162955  27.5862955
 ```
 
 It also outputs matrices of carbon (and any other nutrient) flow
@@ -63,12 +64,13 @@ simply put that element’s name in the place of “Carbon”.
 
 ``` r
 intro_analysis$fmat$Carbon
-#>          Pred     Prey1      Prey2 Microbe1  Detritus
-#> Pred        0 0.1124122 0.08430913 0.000000  0.000000
-#> Prey1       0 0.0000000 1.82508514 0.000000 36.501703
-#> Prey2       0 0.0000000 0.00000000 1.725702  8.628508
-#> Microbe1    0 0.0000000 0.00000000 0.000000  8.407127
-#> Detritus    0 0.0000000 0.00000000 0.000000  0.000000
+#>          Pred     Prey1      Prey2 Microbe1  Detritus   Plant
+#> Pred        0 0.1124122 0.08430913 0.000000  0.000000  0.0000
+#> Prey1       0 0.0000000 0.86954318 0.000000 17.390864 26.0863
+#> Prey2       0 0.0000000 0.00000000 1.371797  6.858986  0.0000
+#> Microbe1    0 0.0000000 0.00000000 0.000000  7.964746  0.0000
+#> Detritus    0 0.0000000 0.00000000 0.000000  0.000000  0.0000
+#> Plant       0 0.0000000 0.00000000 0.000000  0.000000  0.0000
 ```
 
 It also outputs the mineralization rate for each species and each
@@ -78,20 +80,22 @@ element. We can make a graph to show these data more clearly.
 # Data on mineralization rates:
 intro_analysis$mineralization
 #> $Carbon
-#>     Pred    Prey1    Prey2 Microbe1 Detritus 
-#>     0.02     0.80     0.25     1.00     0.00 
+#>     Pred    Prey1    Prey2 Microbe1 Detritus    Plant 
+#>     0.02     0.80     0.25     1.00     0.00     0.00 
 #> 
 #> $Nitrogen
-#>         Pred        Prey1        Prey2     Microbe1     Detritus 
-#>  0.005970492 -3.482310214 -0.338282856 -0.850890872  0.000000000 
+#>         Pred        Prey1        Prey2     Microbe1     Detritus        Plant 
+#>  0.005970492 -3.345858823 -0.258654360 -0.795593305  0.000000000  0.000000000 
 #> 
 #> $Phosphorus
 #>          Pred         Prey1         Prey2      Microbe1      Detritus 
-#> -0.0001222482  0.0083346424  0.0619835732  0.0160000000  0.0000000000 
+#> -0.0001222482  0.1166931005  0.0500923844  0.0160000000  0.0000000000 
+#>         Plant 
+#>  0.0000000000 
 #> 
 #> $Calcium
-#>        Pred       Prey1       Prey2    Microbe1    Detritus 
-#> 0.001192506 0.021432679 0.069731520 0.018000000 0.000000000
+#>        Pred       Prey1       Prey2    Microbe1    Detritus       Plant 
+#> 0.001192506 0.084641779 0.056353932 0.018000000 0.000000000 0.000000000
 ```
 
 Notice how some of the mineralization rates are negative. Microbe1 can
@@ -105,14 +109,19 @@ nutrient rich food. Notice the changes in feeding preferences.
 ``` r
 # Correct the diet
 intro_comm_diet = correct_diet(intro_comm)
+#> Warning in correct_diet(intro_comm): Diet correction removes an item from the
+#> diet of species 2 called Prey1. May get strange model behavior. Check outputs
+#> for errors in diet proportions! This code just deletes the food item and
+#> distirbutes evenly across the other food items.
 
 intro_comm_diet$imat
-#>          Pred    Prey1     Prey2  Microbe1   Detritus
-#> Pred        0 0.765625 0.2343750 0.0000000 0.00000000
-#> Prey1       0 0.000000 0.9130003 0.0000000 0.08699965
-#> Prey2       0 0.000000 0.0000000 0.5181469 0.48185310
-#> Microbe1    0 0.000000 0.0000000 0.0000000 1.00000000
-#> Detritus    0 0.000000 0.0000000 0.0000000 0.00000000
+#>          Pred    Prey1     Prey2  Microbe1  Detritus     Plant
+#> Pred        0 0.765625 0.2343750 0.0000000 0.0000000 0.0000000
+#> Prey1       0 0.000000 0.8826029 0.0000000 0.0000000 0.1173971
+#> Prey2       0 0.000000 0.0000000 0.5181133 0.4818867 0.0000000
+#> Microbe1    0 0.000000 0.0000000 0.0000000 1.0000000 0.0000000
+#> Detritus    0 0.000000 0.0000000 0.0000000 0.0000000 0.0000000
+#> Plant       0 0.000000 0.0000000 0.0000000 0.0000000 0.0000000
 ```
 
 The other option is to correct respiration by increasing the overflow
@@ -135,21 +144,24 @@ intro_comm_resp = correct_respiration(intro_comm)
 #> 3    Prey2          Nitrogen
 #> 4 Microbe1            Carbon
 #> 5 Detritus            Carbon
+#> 6    Plant            Carbon
 
 # Look at the new values for overflow respiration:
 intro_comm_resp$prop$general$Carbon
-#>          ID    E   Q canIMM   d     B isDetritus isPlant FecalRecycling
-#> 1      Pred 0.20 0.5      0 1.0   0.1          0       0              0
-#> 4     Prey1 0.10 0.5      0 3.0   8.0          0       0              0
-#> 7     Prey2 0.05 0.5      0 0.5   5.0          0       0              0
-#> 10 Microbe1 0.05 0.5      0 0.2  20.0          0       0              0
-#> 13 Detritus 0.00 0.5      0 0.0 100.0          1       0              1
+#>          ID    E   Q canIMM    d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0.20 0.5      0 1.00   0.1          0       0              0
+#> 4     Prey1 0.10 0.5      0 3.00   8.0          0       0              0
+#> 7     Prey2 0.05 0.5      0 0.50   5.0          0       0              0
+#> 10 Microbe1 0.05 0.5      0 0.20  20.0          0       0              0
+#> 13 Detritus 0.00 0.5      0 0.00 100.0          1       0              1
+#> 16    Plant 0.00 0.5      0 0.01 150.0          0       1              0
 #>    NecromassRecycling p       Ehat
 #> 1                   0 1 0.05097656
-#> 4                   0 1 7.07486328
-#> 7                   0 1 1.17282366
+#> 4                   0 1 6.24206665
+#> 7                   0 1 0.69294085
 #> 10                  0 1 0.00000000
 #> 13                  1 1 0.00000000
+#> 16                  0 1 0.00000000
 ```
 
 ### Calculating effects on nutrient mineralization
@@ -162,27 +174,28 @@ that are of interest.
 ``` r
 # Calculate the mineralization rates for all elements using the community with corrected respiration rates:
 whomineralizes(intro_comm_resp)
-#>          ID    Element        Direct      Indirect
-#> 1      Pred     Carbon  0.0003888811  0.000000e+00
-#> 2     Prey1     Carbon  0.8893798624 -1.376207e-17
-#> 3     Prey2     Carbon  0.0947365386  0.000000e+00
-#> 4  Microbe1     Carbon  0.0154947179  0.000000e+00
-#> 5  Detritus     Carbon  0.0000000000  0.000000e+00
-#> 6      Pred   Nitrogen -0.0050357333  2.163067e-02
-#> 7     Prey1   Nitrogen  0.0000000000  5.803886e-01
-#> 8     Prey2   Nitrogen  0.0000000000  1.469014e-01
-#> 9  Microbe1   Nitrogen  1.0050357333 -4.009448e-01
-#> 10 Detritus   Nitrogen  0.0000000000  2.114535e+01
-#> 11     Pred Phosphorus  0.0000000000  8.204783e-04
-#> 12    Prey1 Phosphorus  0.7911450285  5.159710e-02
-#> 13    Prey2 Phosphorus  0.1975820508 -1.791033e-04
-#> 14 Microbe1 Phosphorus  0.0112729208 -1.564432e-16
-#> 15 Detritus Phosphorus  0.0000000000 -1.035934e+00
-#> 16     Pred    Calcium  0.0008248540  8.500475e-04
-#> 17    Prey1    Calcium  0.7920566037  5.113900e-02
-#> 18    Prey2    Calcium  0.1959393451 -1.830728e-04
-#> 19 Microbe1    Calcium  0.0111791972 -1.379045e-16
-#> 20 Detritus    Calcium  0.0000000000 -1.027322e+00
+#>          ID     consump basal_C_consump  min_Carbon  min_Nitrogen
+#> 1      Pred   0.2050781       0.0000000  0.02509766  7.167187e-03
+#> 2     Prey1 133.2474609     130.6347656 50.73653320 -2.955858e-15
+#> 3     Prey2  19.8117560      16.5097966  3.71470424 -5.329071e-16
+#> 4  Microbe1  10.3774492      10.3774492  1.00000000 -1.097181e+00
+#> 5  Detritus -24.4045243       0.0000000  0.00000000  0.000000e+00
+#> 6     Plant  79.8808594       0.0000000  0.00000000  0.000000e+00
+#> 7      Pred          NA       0.4174345  0.00000000 -2.950965e-02
+#> 8     Prey1          NA     267.0461697  0.00000000 -3.517187e-01
+#> 9     Prey2          NA      33.9575021  0.00000000 -2.459124e-01
+#> 10 Microbe1          NA      17.4529390  0.00000000  3.467057e-01
+#>    min_Phosphorus  min_Calcium          Effect
+#> 1     0.000000000  0.001328125          Direct
+#> 2     1.317280781  1.317642539          Direct
+#> 3     0.170381101  0.191678739          Direct
+#> 4     0.016000000  0.018000000          Direct
+#> 5     0.000000000  0.000000000          Direct
+#> 6     0.000000000  0.000000000          Direct
+#> 7     0.001618310  0.001603096 Indirect static
+#> 8     0.031430208  0.035312109 Indirect static
+#> 9    -0.008203523 -0.004931873 Indirect static
+#> 10    0.000000000  0.000000000 Indirect static
 ```
 
 ### Modifying respiration parameters
@@ -199,35 +212,39 @@ not matter, but it is important when simulating the food web.
 temp_comm = E_to_p(intro_comm)
 
 temp_comm$prop$general$Carbon
-#>          ID E   Q canIMM   d     B isDetritus isPlant FecalRecycling
-#> 1      Pred 0 0.5      0 1.0   0.1          0       0              0
-#> 4     Prey1 0 0.5      0 3.0   8.0          0       0              0
-#> 7     Prey2 0 0.5      0 0.5   5.0          0       0              0
-#> 10 Microbe1 0 0.5      0 0.2  20.0          0       0              0
-#> 13 Detritus 0 0.5      0 0.0 100.0          1       0              1
+#>          ID E   Q canIMM    d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0 0.5      0 1.00   0.1          0       0              0
+#> 4     Prey1 0 0.5      0 3.00   8.0          0       0              0
+#> 7     Prey2 0 0.5      0 0.50   5.0          0       0              0
+#> 10 Microbe1 0 0.5      0 0.20  20.0          0       0              0
+#> 13 Detritus 0 0.5      0 0.00 100.0          1       0              1
+#> 16    Plant 0 0.5      0 0.01 150.0          0       1              0
 #>    NecromassRecycling         p Ehat
 #> 1                   0 0.8333333    0
 #> 4                   0 0.9678875    0
-#> 7                   0 0.9463450    0
-#> 10                  0 0.8513166    0
+#> 7                   0 0.9325027    0
+#> 10                  0 0.8430584    0
 #> 13                  1 1.0000000    0
+#> 16                  0 1.0000000    0
 
 # Switch back
 temp_comm = p_to_E(temp_comm)
 
 temp_comm$prop$general$Carbon
-#>          ID    E   Q canIMM   d     B isDetritus isPlant FecalRecycling
-#> 1      Pred 0.20 0.5      0 1.0   0.1          0       0              0
-#> 4     Prey1 0.10 0.5      0 3.0   8.0          0       0              0
-#> 7     Prey2 0.05 0.5      0 0.5   5.0          0       0              0
-#> 10 Microbe1 0.05 0.5      0 0.2  20.0          0       0              0
-#> 13 Detritus 0.00 0.5      0 0.0 100.0          1       0              1
+#>          ID    E   Q canIMM    d     B isDetritus isPlant FecalRecycling
+#> 1      Pred 0.20 0.5      0 1.00   0.1          0       0              0
+#> 4     Prey1 0.10 0.5      0 3.00   8.0          0       0              0
+#> 7     Prey2 0.05 0.5      0 0.50   5.0          0       0              0
+#> 10 Microbe1 0.05 0.5      0 0.20  20.0          0       0              0
+#> 13 Detritus 0.00 0.5      0 0.00 100.0          1       0              1
+#> 16    Plant 0.00 0.5      0 0.01 150.0          0       1              0
 #>    NecromassRecycling p Ehat
 #> 1                   0 1    0
 #> 4                   0 1    0
 #> 7                   0 1    0
 #> 10                  0 1    0
 #> 13                  1 1    0
+#> 16                  0 1    0
 
 # Clean up environment
 rm(temp_comm)
@@ -252,13 +269,15 @@ feeding list table by either Predator or Prey columns, respectively.
 # Feeding list example for the introductory community:
 feedinglist
 #>   Predator     Prey Preference aCarbon aNitrogen aPhosphorus aCalcium
-#> 1     Pred    Prey1        1.0    0.61       0.7         0.8      0.8
-#> 2     Pred    Prey2        1.2    0.61       0.7         0.8      0.8
-#> 3    Prey1    Prey2        1.0    0.65       0.7         0.8      0.8
-#> 4    Prey2 Microbe1        1.0    0.45       0.7         0.8      0.8
-#> 5    Prey2 Detritus        1.0    0.45       0.7         0.8      0.8
-#> 6    Prey1 Detritus        1.0    0.65       0.7         0.8      0.8
-#> 7 Microbe1 Detritus        1.0    0.80       0.7         0.8      0.8
+#> 1     Pred    Prey1        1.0    0.61       0.7         0.8     0.80
+#> 2     Pred    Prey2        1.2    0.61       0.7         0.8     0.80
+#> 3    Prey1    Prey2        1.0    0.65       0.7         0.8     0.80
+#> 4    Prey2 Microbe1        1.0    0.45       0.7         0.8     0.80
+#> 5    Prey2 Detritus        1.0    0.45       0.7         0.8     0.80
+#> 6    Prey1 Detritus        1.0    0.65       0.7         0.8     0.80
+#> 7 Microbe1 Detritus        1.0    0.80       0.7         0.8     0.80
+#> 8    Prey1    Plant        1.0    0.50       0.6         0.7     0.75
+#> 9    Prey1    Plant        1.0    0.50       0.6         0.7     0.75
 ```
 
 The second is a properties dataframe listing the necessary parameters.
@@ -284,61 +303,61 @@ yourfoodweb = build_foodweb(feeding = feedinglist, properties = properties_examp
 
 str(yourfoodweb)
 #> List of 2
-#>  $ imat: num [1:5, 1:5] 0 0 0 0 0 1 0 0 0 0 ...
+#>  $ imat: num [1:6, 1:6] 0 0 0 0 0 ...
 #>   ..- attr(*, "dimnames")=List of 2
-#>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
 #>  $ prop:List of 2
 #>   ..$ general     :List of 4
-#>   .. ..$ Carbon    :'data.frame':    5 obs. of  12 variables:
-#>   .. .. ..$ ID                : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. ..$ E                 : num [1:5] 0.2 0.1 0.05 0.05 0
-#>   .. .. ..$ Q                 : num [1:5] 0.5 0.5 0.5 0.5 0.5
-#>   .. .. ..$ canIMM            : num [1:5] 0 0 0 0 0
-#>   .. .. ..$ d                 : num [1:5] 1 3 0.5 0.2 0
-#>   .. .. ..$ B                 : num [1:5] 0.1 8 5 20 100
-#>   .. .. ..$ isDetritus        : num [1:5] 0 0 0 0 1
-#>   .. .. ..$ isPlant           : num [1:5] 0 0 0 0 0
-#>   .. .. ..$ FecalRecycling    : num [1:5] 0 0 0 0 1
-#>   .. .. ..$ NecromassRecycling: num [1:5] 0 0 0 0 1
-#>   .. .. ..$ p                 : num [1:5] 1 1 1 1 1
-#>   .. .. ..$ Ehat              : num [1:5] 0 0 0 0 0
+#>   .. ..$ Carbon    :'data.frame':    6 obs. of  12 variables:
+#>   .. .. ..$ ID                : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ E                 : num [1:6] 0.2 0.1 0.05 0.05 0 0
+#>   .. .. ..$ Q                 : num [1:6] 0.5 0.5 0.5 0.5 0.5 0.5
+#>   .. .. ..$ canIMM            : num [1:6] 0 0 0 0 0 0
+#>   .. .. ..$ d                 : num [1:6] 1 3 0.5 0.2 0 0.01
+#>   .. .. ..$ B                 : num [1:6] 0.1 8 5 20 100 150
+#>   .. .. ..$ isDetritus        : num [1:6] 0 0 0 0 1 0
+#>   .. .. ..$ isPlant           : num [1:6] 0 0 0 0 0 1
+#>   .. .. ..$ FecalRecycling    : num [1:6] 0 0 0 0 1 0
+#>   .. .. ..$ NecromassRecycling: num [1:6] 0 0 0 0 1 0
+#>   .. .. ..$ p                 : num [1:6] 1 1 1 1 1 1
+#>   .. .. ..$ Ehat              : num [1:6] 0 0 0 0 0 0
 #>   .. .. ..- attr(*, "reshapeWide")=List of 5
 #>   .. .. .. ..$ v.names: NULL
 #>   .. .. .. ..$ timevar: chr "Parameter"
 #>   .. .. .. ..$ idvar  : chr "ID"
 #>   .. .. .. ..$ times  : chr [1:11] "E" "Q" "canIMM" "d" ...
 #>   .. .. .. ..$ varying: chr [1, 1:11] "Value.E" "Value.Q" "Value.canIMM" "Value.d" ...
-#>   .. ..$ Nitrogen  :'data.frame':    5 obs. of  5 variables:
-#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. ..$ Q     : num [1:5] 0.111 0.104 0.1 0.1 0.025
-#>   .. .. ..$ canIMM: num [1:5] 0 0 0 1 0
-#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..$ Nitrogen  :'data.frame':    6 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:6] 0.111 0.104 0.1 0.1 0.025 0.03
+#>   .. .. ..$ canIMM: num [1:6] 0 0 0 1 0 0
+#>   .. .. ..$ p     : num [1:6] 1 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:6] 0 0 0 0 0 0
 #>   .. .. ..- attr(*, "reshapeWide")=List of 5
 #>   .. .. .. ..$ v.names: NULL
 #>   .. .. .. ..$ timevar: chr "Parameter"
 #>   .. .. .. ..$ idvar  : chr "ID"
 #>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
 #>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
-#>   .. ..$ Phosphorus:'data.frame':    5 obs. of  5 variables:
-#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. ..$ Q     : num [1:5] 0.015 0.01 0.008 0.008 0.008
-#>   .. .. ..$ canIMM: num [1:5] 0 0 0 1 0
-#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..$ Phosphorus:'data.frame':    6 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:6] 0.015 0.01 0.008 0.008 0.008 0.01
+#>   .. .. ..$ canIMM: num [1:6] 0 0 0 1 0 0
+#>   .. .. ..$ p     : num [1:6] 1 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:6] 0 0 0 0 0 0
 #>   .. .. ..- attr(*, "reshapeWide")=List of 5
 #>   .. .. .. ..$ v.names: NULL
 #>   .. .. .. ..$ timevar: chr "Parameter"
 #>   .. .. .. ..$ idvar  : chr "ID"
 #>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
 #>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
-#>   .. ..$ Calcium   :'data.frame':    5 obs. of  5 variables:
-#>   .. .. ..$ ID    : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. ..$ Q     : num [1:5] 0.01 0.011 0.009 0.009 0.009
-#>   .. .. ..$ canIMM: num [1:5] 0 0 0 0 0
-#>   .. .. ..$ p     : num [1:5] 1 1 1 1 1
-#>   .. .. ..$ Emin  : num [1:5] 0 0 0 0 0
+#>   .. ..$ Calcium   :'data.frame':    6 obs. of  5 variables:
+#>   .. .. ..$ ID    : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. ..$ Q     : num [1:6] 0.01 0.011 0.009 0.009 0.009 0.009
+#>   .. .. ..$ canIMM: num [1:6] 0 0 0 0 0 0
+#>   .. .. ..$ p     : num [1:6] 1 1 1 1 1 1
+#>   .. .. ..$ Emin  : num [1:6] 0 0 0 0 0 0
 #>   .. .. ..- attr(*, "reshapeWide")=List of 5
 #>   .. .. .. ..$ v.names: NULL
 #>   .. .. .. ..$ timevar: chr "Parameter"
@@ -346,22 +365,22 @@ str(yourfoodweb)
 #>   .. .. .. ..$ times  : chr [1:4] "Q" "canIMM" "p" "Emin"
 #>   .. .. .. ..$ varying: chr [1, 1:4] "Value.Q" "Value.canIMM" "Value.p" "Value.Emin"
 #>   ..$ assimilation:List of 4
-#>   .. ..$ Carbon    : num [1:5, 1:5] 1 1 1 1 1 0.61 1 1 1 1 ...
+#>   .. ..$ Carbon    : num [1:6, 1:6] 0 0 0 0 0 0 0.61 0 0 0 ...
 #>   .. .. ..- attr(*, "dimnames")=List of 2
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ Nitrogen  : num [1:5, 1:5] 1 1 1 1 1 0.7 1 1 1 1 ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Nitrogen  : num [1:6, 1:6] 0 0 0 0 0 0 0.7 0 0 0 ...
 #>   .. .. ..- attr(*, "dimnames")=List of 2
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ Phosphorus: num [1:5, 1:5] 1 1 1 1 1 0.8 1 1 1 1 ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Phosphorus: num [1:6, 1:6] 0 0 0 0 0 0 0.8 0 0 0 ...
 #>   .. .. ..- attr(*, "dimnames")=List of 2
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. ..$ Calcium   : num [1:5, 1:5] 1 1 1 1 1 0.8 1 1 1 1 ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. ..$ Calcium   : num [1:6, 1:6] 0 0 0 0 0 0 0.8 0 0 0 ...
 #>   .. .. ..- attr(*, "dimnames")=List of 2
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
-#>   .. .. .. ..$ : chr [1:5] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
+#>   .. .. .. ..$ : chr [1:6] "Pred" "Prey1" "Prey2" "Microbe1" ...
 ```
 
 The function creates an interaction matrix and also breaks out the

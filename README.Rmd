@@ -27,7 +27,7 @@ You can install the development version of multnutFW from [GitHub](https://githu
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("robertwbuchkowski/multnutFW@development")
+devtools::install_github("robertwbuchkowski/multnutFW@main")
 ```
 
 ## Example
