@@ -53,7 +53,7 @@ getPARAMS <- function(usin,
       usin = suppressWarnings(correct_diet(usin, dietlimits = DIETLIMITS))
     }
 
-    usin = correct_respiration(usin, output_type = F)[[1]]
+    usin = correct_respiration(usin, output_limitation = F)
   }
 
   Nnodes = dim(usin$imat)[1] # Number of nodes
