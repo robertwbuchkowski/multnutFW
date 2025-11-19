@@ -116,10 +116,9 @@ whomineralizes <- function(usin,
 
         outputsave = ans$x
 
-        colnames(outputsave) = names(sim_par_mod$yeqm)
-
         # Get the stability:
         if(!all(is.null(outputsave))){
+          colnames(outputsave) = names(sim_par_mod$yeqm)
           stab = rep(NA, nrow(outputsave))
           for(ii in 1:length(stab)){
             jac <- rootSolve::jacobian.full(outputsave[1,], func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
