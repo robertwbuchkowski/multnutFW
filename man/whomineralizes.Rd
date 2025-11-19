@@ -8,10 +8,11 @@ whomineralizes(
   usin,
   selected = NULL,
   simulation_params = NULL,
+  new_equilibrium = T,
   simulation_time = NA,
   mod_stoich = TRUE,
   extinct_threshold = 1.5e-08,
-  n_sim_trials = 200
+  n_sim_trials = 50
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ whomineralizes(
 \item{selected}{A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)}
 
 \item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
+
+\item{new_equilibrium}{Should dynamic new equilibria be calculated? TRUE or FALSE.}
 
 \item{simulation_time}{How long should the simulation last. Default of searches for stable equilibrium, if they exist.}
 
@@ -42,6 +45,7 @@ The results are labeled as follows with direct contributions calculated from the
   \item{Direct}{The direct contribution to mineralization.}
   \item{Indirect_static}{The indirect contribution to mineralization when the species is removed at equilibrium.}
   \item{Indirect_dynamic}{The indirect contribution to mineralization when the species is removed and equilibrium is recalculated.}
+  #'   \item{simulation}{The indirect contribution to mineralization when the species is removed and the model is simulated over time.}
 }
 The indirect contributions are calculated as the total mineralization of the community with the trophic species minus the trophic species direct mineralization minus the total mineralization without the trophic species all divided by the total mineralizaiton with the trophic species.
 }
