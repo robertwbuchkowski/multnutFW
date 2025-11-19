@@ -110,7 +110,6 @@ whomineralizes <- function(usin,
 
 
       if(new_equilibrium){
-        browser()
         xstart <- matrix(stats::runif(n_sim_trials*length(sim_par_mod$yeqm), min = 0, max = 10), ncol = length(sim_par_mod$yeqm))  # 100 guesses for the variables
 
         ans <- nleqslv::searchZeros(xstart, equilibrium_fn, method = "Broyden", global = "dbldog")

@@ -19,6 +19,9 @@ foodwebode <- function(t,y,pars){
 
   Det_Qmat = Det_stocks/biomass[pars$detplant$isDetritus == 1]
 
+  # Replace any non-finite values (Inf, NaN) with 0
+  Det_Qmat[!is.finite(Det_Qmat)] <- 0
+
   Qmat = pars$Qmat
 
   Qmat[pars$detplant$isDetritus == 1,] = c(Qmat[pars$detplant$isDetritus == 1, 1],Det_Qmat)
