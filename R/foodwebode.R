@@ -190,33 +190,6 @@ foodwebode <- function(t,y,pars){
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
 
-  # Smooth Mineralization Flux Adjustment:
-
-  # Parameters
-  C_threshold <- 0.01
-  k <- 50
-
-  # Carbon pools for detritus rows
-  C_det <- ymat[det_idx, 1]
-
-  # Compute smooth loss fraction for all detritus rows
-  loss_fraction <- 1 / (1 + exp(k * (C_det - C_threshold)))
-
-  # Expand loss_fraction to match nutrient columns
-  loss_matrix <- matrix(loss_fraction, nrow = length(det_idx), ncol = ncol(ymat) - 1)
-
-  # Calculate nutrient flux currently in netwithmineralization
-  nutrient_flux <- netwithmineralization[det_idx, -1]
-
-  # Compute mineralized portion (to inorganic pools)
-  mineralized <- nutrient_flux * loss_matrix
-
-  # Reduce nutrient flux in detritus pools
-  netwithmineralization[det_idx, -1] <- nutrient_flux - mineralized
-
-  # Update inorganic flux
-  dinorganic <- dinorganic + colSums(mineralized)
-
   D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
 
