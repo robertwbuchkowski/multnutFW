@@ -8,7 +8,7 @@ whomineralizes(
   usin,
   selected = NULL,
   simulation_params = NULL,
-  new_equilibrium = T,
+  new_equilibrium = F,
   simulation_time = NA,
   mod_stoich = TRUE,
   extinct_threshold = 1.5e-08,

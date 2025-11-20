@@ -28,13 +28,16 @@
 whomineralizes <- function(usin,
                            selected = NULL,
                            simulation_params = NULL,
-                           new_equilibrium = T,
+                           new_equilibrium = F,
                            simulation_time = NA,
                            mod_stoich = TRUE,
                            extinct_threshold = 1.5e-8,
                            n_sim_trials = 50){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
+
+
+  if(new_equilibrium & Nnodes > 5) warning("Errors are very likely. Solving a system that is more than 5 nodes to a new equilibrium is computationally difficult and often produces stange errors when using the foodwebode function. Proceed with caution.")
 
   # Select only the chosen nodes:
   if(!is.null(selected)){
@@ -54,7 +57,7 @@ whomineralizes <- function(usin,
 
   output_direct = cbind(data.frame(ID = colnames(usin$imat),
                       consump = res1$consumption,
-                      basal_C_consump = rowSums(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1])),
+                      basal_C_consump = rowSums(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1, drop = FALSE])),
                  mindf)
 
   rownames(output_direct) = NULL

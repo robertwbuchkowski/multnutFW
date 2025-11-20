@@ -12,7 +12,7 @@ foodwebode <- function(t,y,pars){
   if(pars$forcepositive == 1) y = pmax(y, 0) # Clamp all values to be positive.
 
   # Detritus index:
-  det_idx <- which(pars$detplant$isDetritus == 1)
+  det_idx <- pars$detplant$isDetritus == 1
 
   yunstd = y*pars$eqmStandard
 
