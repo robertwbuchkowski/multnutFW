@@ -11,27 +11,30 @@ foodwebode <- function(t,y,pars){
 
   if(pars$forcepositive == 1) y = pmax(y, 0) # Clamp all values to be positive.
 
+  # Detritus index:
+  det_idx <- which(pars$detplant$isDetritus == 1)
+
   yunstd = y*pars$eqmStandard
 
   biomass = yunstd[1:nrow(pars$pmat)]
 
   Det_stocks = yunstd[(nrow(pars$pmat)+1):(nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1))]
 
-  Det_Qmat = Det_stocks/biomass[pars$detplant$isDetritus == 1]
+  Det_Qmat = Det_stocks/biomass[det_idx]
 
   # Replace any non-finite values (Inf, NaN) with 0
   Det_Qmat[!is.finite(Det_Qmat)] <- 0
 
   Qmat = pars$Qmat
 
-  Qmat[pars$detplant$isDetritus == 1,] = c(Qmat[pars$detplant$isDetritus == 1, 1],Det_Qmat)
+  Qmat[det_idx,] = c(Qmat[det_idx, 1],Det_Qmat)
 
   ymat = biomass*Qmat
 
   # Check to make sure the ymat is right:
   if(!all.equal(
-    matrix(unname(ymat[pars$detplant$isDetritus == 1,-1]), nrow = sum(pars$detplant$isDetritus == 1)),
-    unname(matrix(Det_stocks, nrow = sum(pars$detplant$isDetritus == 1)))
+    matrix(unname(ymat[det_idx,-1]), nrow = sum(det_idx)),
+    unname(matrix(Det_stocks, nrow = sum(det_idx)))
     )
     ) stop("Error converting detritus nutrients.")
 
@@ -164,7 +167,7 @@ foodwebode <- function(t,y,pars){
   ) # Take either the basal respiration rate or the minimum respiration rate from nutrient limitation.
 
   # Remove detritus respiration if created:
-  actualresp[which(pars$detplant$isDetritus == 1)] = 0
+  actualresp[which(det_idx)] = 0
 
   totalrespsave = -actualresp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
 
@@ -175,7 +178,7 @@ foodwebode <- function(t,y,pars){
 
   # Remove detritus mineralization (does not exhibit this stoichiometry):
 
-  mineralization[which(pars$detplant$isDetritus == 1),] = 0
+  mineralization[which(det_idx),] = 0
 
   # Calculate changes in inorganic pools:
   if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
@@ -187,7 +190,34 @@ foodwebode <- function(t,y,pars){
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
 
-  D_element_biomass = (netwithmineralization[which(pars$detplant$isDetritus == 1),-1])
+  # Smooth Mineralization Flux Adjustment:
+
+  # Parameters
+  C_threshold <- 0.01
+  k <- 50
+
+  # Carbon pools for detritus rows
+  C_det <- ymat[det_idx, 1]
+
+  # Compute smooth loss fraction for all detritus rows
+  loss_fraction <- 1 / (1 + exp(k * (C_det - C_threshold)))
+
+  # Expand loss_fraction to match nutrient columns
+  loss_matrix <- matrix(loss_fraction, nrow = length(det_idx), ncol = ncol(ymat) - 1)
+
+  # Calculate nutrient flux currently in netwithmineralization
+  nutrient_flux <- netwithmineralization[det_idx, -1]
+
+  # Compute mineralized portion (to inorganic pools)
+  mineralized <- nutrient_flux * loss_matrix
+
+  # Reduce nutrient flux in detritus pools
+  netwithmineralization[det_idx, -1] <- nutrient_flux - mineralized
+
+  # Update inorganic flux
+  dinorganic <- dinorganic + colSums(mineralized)
+
+  D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
 
   #===========================#
@@ -237,6 +267,7 @@ foodwebode <- function(t,y,pars){
       fluxTCARCASS + # positive b/c resp already negative
       # Respiration loss:
       fluxTRESP
+
 
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
