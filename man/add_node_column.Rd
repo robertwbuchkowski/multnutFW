@@ -104,11 +104,6 @@ add_node_column(dfs, node_col = "group")
 #> 3  3    30     B
 #> 4  4    40     B
 
-# Different column sets: missing columns are filled with NA
-df_c <- data.frame(id = 5, extra = "x")
-dfs2 <- list(A = df_a, C = df_c)
-add_node_column(dfs2)
-
 }
 \seealso{
 \code{\link[base]{rbind}}, \code{\link[base]{Map}}
