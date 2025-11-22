@@ -197,6 +197,9 @@ foodwebode <- function(t,y,pars){
 
   output_direct_effects[,1] = totalrespsave
 
+  output_direct_effects_v <- as.vector(output_direct_effects)
+
+  names(output_direct_effects_v) <- as.vector(outer(rownames(output_direct_effects), colnames(output_direct_effects), paste, sep = "_"))
 
   #===========================#
   #  Conduct tracer analysis  #
@@ -261,7 +264,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects))
+      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects_v))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)

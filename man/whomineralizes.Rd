@@ -4,33 +4,12 @@
 \alias{whomineralizes}
 \title{Direct and indirect contributions to mineralizations}
 \usage{
-whomineralizes(
-  usin,
-  selected = NULL,
-  simulation_params = NULL,
-  new_equilibrium = F,
-  simulation_time = NA,
-  mod_stoich = TRUE,
-  extinct_threshold = 1.5e-08,
-  n_sim_trials = 50
-)
+whomineralizes(usin, selected = NULL)
 }
 \arguments{
 \item{usin}{The community in which we want to calculate mineralization rates.}
 
 \item{selected}{A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)}
-
-\item{simulation_params}{The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.}
-
-\item{new_equilibrium}{Should dynamic new equilibria be calculated? TRUE or FALSE.}
-
-\item{simulation_time}{How long should the simulation last. Default of searches for stable equilibrium, if they exist.}
-
-\item{mod_stoich}{Should the simulation modify the nutrient content of detritus based on the new simulated equilibrium? TRUE or FALSE.}
-
-\item{extinct_threshold}{The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.}
-
-\item{n_sim_trials}{The number of trial starting vectors used for the simulation of indirect effects. Larger numbers means slower execution and greater chance of finding equilibria.}
 }
 \value{
 A table of node effects on mineralization rates.
@@ -43,9 +22,7 @@ The results are labeled as follows with direct contributions calculated from the
 
 \describe{
   \item{Direct}{The direct contribution to mineralization.}
-  \item{Indirect_static}{The indirect contribution to mineralization when the species is removed at equilibrium.}
-  \item{Indirect_dynamic}{The indirect contribution to mineralization when the species is removed and equilibrium is recalculated.}
-  #'   \item{simulation}{The indirect contribution to mineralization when the species is removed and the model is simulated over time.}
+  \item{Indirect}{The indirect contribution to mineralization when the species is removed at equilibrium.}
 }
 The indirect contributions are calculated as the total mineralization of the community with the trophic species minus the trophic species direct mineralization minus the total mineralization without the trophic species all divided by the total mineralizaiton with the trophic species.
 }

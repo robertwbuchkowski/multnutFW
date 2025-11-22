@@ -354,3 +354,170 @@ checkeqm <- function(usin, eqmtolerance = 1.5e-8){
   !any(unname(foodwebode(t = 1, y = getPARAMS(usin)$yeqm, pars = getPARAMS(usin)$parameters)[[1]]) > eqmtolerance)
 
 }
+
+
+
+#' Add a node label column to each data frame in a named list and row-bind
+#'
+#' @description
+#' Takes a **named** list of data frames, adds a column (default: `"Node"`)
+#' to each data frame containing its list element name, and returns a single
+#' data frame created by row-binding all elements. This is useful for
+#' tracking the origin (node/group/source) of rows after combining multiple
+#' tables.
+#'
+#' @param df_list A **named** list of data frames. Each element must be a
+#'   data frame. The names of `df_list` are written into the node column.
+#' @param node_col A length-1 character string giving the name of the node
+#'   column to add to each data frame. Defaults to `"Node"`.
+#'
+#' @details
+#' - The function validates that `df_list` is a named list and that every
+#'   element is a data frame.
+#' - The node label for each row is the corresponding element name from
+#'   `names(df_list)`.
+#' - Row names are dropped in the result for cleanliness.
+#' - When the input data frames have differing column sets, `rbind` will
+#'   align by column name and fill missing columns with `NA`.
+#'
+#' @return A data frame containing all rows from `df_list` with an additional
+#'   `node_col` indicating the source list element.
+#'
+#' @examples
+#' # Example data
+#' df_a <- data.frame(id = 1:2, value = c(10, 20))
+#' df_b <- data.frame(id = 3:4, value = c(30, 40))
+#'
+#' # Named list of data frames
+#' dfs <- list(A = df_a, B = df_b)
+#'
+#' # Add node column and bind
+#' add_node_column(dfs)
+#' #>   id value Node
+#' #> 1  1    10    A
+#' #> 2  2    20    A
+#' #> 3  3    30    B
+#' #> 4  4    40    B
+#'
+#' # Custom node column name
+#' add_node_column(dfs, node_col = "group")
+#' #>   id value group
+#' #> 1  1    10     A
+#' #> 2  2    20     A
+#' #> 3  3    30     B
+#' #> 4  4    40     B
+#'
+#' # Different column sets: missing columns are filled with NA
+#' df_c <- data.frame(id = 5, extra = "x")
+#' dfs2 <- list(A = df_a, C = df_c)
+#' add_node_column(dfs2)
+#'
+#' @seealso
+#' \code{\link[base]{rbind}}, \code{\link[base]{Map}}
+#'
+#' @export
+add_node_column <- function(df_list, node_col = "Node") {
+  # Validate input
+  stopifnot(is.list(df_list))
+  if (is.null(names(df_list)) || any(names(df_list) == "")) {
+    stop("`df_list` must be a *named* list. Please set names(df_list).")
+  }
+
+  # Add Node column to each data frame
+  df_list_with_node <- Map(
+    function(df, nm) {
+      if (!is.data.frame(df)) stop("All elements of `df_list` must be data frames.")
+      df[[node_col]] <- nm
+      df
+    },
+    df_list,
+    names(df_list)
+  )
+
+  res <- do.call(rbind, df_list_with_node)
+
+  # Drop row names for cleanliness
+  rownames(res) <- NULL
+  res
+}
+
+
+
+#' Add a node label column to each data frame in a named list and row-bind
+#'
+#' @description
+#' Takes a **named** list of data frames, adds a column (default: `"Node"`)
+#' to each data frame containing its list element name, and returns a single
+#' data frame created by row-binding all elements. This is useful for
+#' tracking the origin (node/group/source) of rows after combining multiple
+#' tables.
+#'
+#' @param df_list A **named** list of data frames. Each element must be a
+#'   data frame. The names of `df_list` are written into the node column.
+#' @param node_col A length-1 character string giving the name of the node
+#'   column to add to each data frame. Defaults to `"Node"`.
+#'
+#' @details
+#' - The function validates that `df_list` is a named list and that every
+#'   element is a data frame.
+#' - The node label for each row is the corresponding element name from
+#'   `names(df_list)`.
+#' - Row names are dropped in the result for cleanliness.
+#' - When the input data frames have differing column sets, `rbind` will
+#'   align by column name and fill missing columns with `NA`.
+#'
+#' @return A data frame containing all rows from `df_list` with an additional
+#'   `node_col` indicating the source list element.
+#'
+#' @examples
+#' # Example data
+#' df_a <- data.frame(id = 1:2, value = c(10, 20))
+#' df_b <- data.frame(id = 3:4, value = c(30, 40))
+#'
+#' # Named list of data frames
+#' dfs <- list(A = df_a, B = df_b)
+#'
+#' # Add node column and bind
+#' add_node_column(dfs)
+#' #>   id value Node
+#' #> 1  1    10    A
+#' #> 2  2    20    A
+#' #> 3  3    30    B
+#' #> 4  4    40    B
+#'
+#' # Custom node column name
+#' add_node_column(dfs, node_col = "group")
+#' #>   id value group
+#' #> 1  1    10     A
+#' #> 2  2    20     A
+#' #> 3  3    30     B
+#' #> 4  4    40     B
+#'
+#' @seealso
+#' \code{\link[base]{rbind}}, \code{\link[base]{Map}}
+#'
+#' @export
+add_node_column <- function(df_list, node_col = "Node") {
+  # Validate input
+  stopifnot(is.list(df_list))
+  if (is.null(names(df_list)) || any(names(df_list) == "")) {
+    stop("`df_list` must be a *named* list. Please set names(df_list).")
+  }
+
+  # Add Node column to each data frame
+  df_list_with_node <- Map(
+    function(df, nm) {
+      if (!is.data.frame(df)) stop("All elements of `df_list` must be data frames.")
+      df[[node_col]] <- nm
+      df
+    },
+    df_list,
+    names(df_list)
+  )
+
+  res <- do.call(rbind, df_list_with_node)
+
+  # Drop row names for cleanliness
+  rownames(res) <- NULL
+  res
+}
