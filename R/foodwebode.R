@@ -193,6 +193,11 @@ foodwebode <- function(t,y,pars){
   D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
 
+  output_direct_effects = mineralization - immobilization
+
+  output_direct_effects[,1] = totalrespsave
+
+
   #===========================#
   #  Conduct tracer analysis  #
   #===========================#
@@ -245,7 +250,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, fluxTRESPtotal = fluxTRESPtotal))
+      return(list(dy, dinorganic = dinorganic, direct_effect =  output_direct_effects, fluxTRESPtotal = fluxTRESPtotal))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
@@ -256,7 +261,7 @@ foodwebode <- function(t,y,pars){
     if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
       dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
       names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave))
+      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects))
     }else{
       stop("not working yet")
       dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
