@@ -72,13 +72,11 @@ This function:
 
 \examples{
 \dontrun{
-# Minimal example (assuming foodwebode, add_node_column, and PARMSET are defined)
 res <- total_effect_simulate(
-  PARMSET = PARMSET,
-  IDS = c("bacteria", "fungi"),
-  SIM_TIME = 25,
-  perterbation_factor = 0.5
-)
+PARMSET = getPARAMS(correct_respiration(intro_comm)),
+IDS = c("Pred", "Prey1", "Prey2"),
+SIM_TIME = 25,
+perterbation_factor = 0.5)
 
 # Direct contributions:
 head(res$output_direct)

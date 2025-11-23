@@ -5,8 +5,6 @@
 \title{Add a node label column to each data frame in a named list and row-bind}
 \usage{
 add_node_column(df_list, node_col = "Node")
-
-add_node_column(df_list, node_col = "Node")
 }
 \arguments{
 \item{df_list}{A **named** list of data frames. Each element must be a
@@ -18,9 +16,6 @@ column to add to each data frame. Defaults to `"Node"`.}
 \value{
 A data frame containing all rows from `df_list` with an additional
   `node_col` indicating the source list element.
-
-A data frame containing all rows from `df_list` with an additional
-  `node_col` indicating the source list element.
 }
 \description{
 Takes a **named** list of data frames, adds a column (default: `"Node"`)
@@ -28,22 +23,8 @@ to each data frame containing its list element name, and returns a single
 data frame created by row-binding all elements. This is useful for
 tracking the origin (node/group/source) of rows after combining multiple
 tables.
-
-Takes a **named** list of data frames, adds a column (default: `"Node"`)
-to each data frame containing its list element name, and returns a single
-data frame created by row-binding all elements. This is useful for
-tracking the origin (node/group/source) of rows after combining multiple
-tables.
 }
 \details{
-- The function validates that `df_list` is a named list and that every
-  element is a data frame.
-- The node label for each row is the corresponding element name from
-  `names(df_list)`.
-- Row names are dropped in the result for cleanliness.
-- When the input data frames have differing column sets, `rbind` will
-  align by column name and fill missing columns with `NA`.
-
 - The function validates that `df_list` is a named list and that every
   element is a data frame.
 - The node label for each row is the corresponding element name from
@@ -76,37 +57,7 @@ add_node_column(dfs, node_col = "group")
 #> 3  3    30     B
 #> 4  4    40     B
 
-# Different column sets: missing columns are filled with NA
-df_c <- data.frame(id = 5, extra = "x")
-dfs2 <- list(A = df_a, C = df_c)
-add_node_column(dfs2)
-
-# Example data
-df_a <- data.frame(id = 1:2, value = c(10, 20))
-df_b <- data.frame(id = 3:4, value = c(30, 40))
-
-# Named list of data frames
-dfs <- list(A = df_a, B = df_b)
-
-# Add node column and bind
-add_node_column(dfs)
-#>   id value Node
-#> 1  1    10    A
-#> 2  2    20    A
-#> 3  3    30    B
-#> 4  4    40    B
-
-# Custom node column name
-add_node_column(dfs, node_col = "group")
-#>   id value group
-#> 1  1    10     A
-#> 2  2    20     A
-#> 3  3    30     B
-#> 4  4    40     B
-
 }
 \seealso{
-\code{\link[base]{rbind}}, \code{\link[base]{Map}}
-
 \code{\link[base]{rbind}}, \code{\link[base]{Map}}
 }

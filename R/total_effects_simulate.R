@@ -56,13 +56,11 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Minimal example (assuming foodwebode, add_node_column, and PARMSET are defined)
 #' res <- total_effect_simulate(
-#'   PARMSET = PARMSET,
-#'   IDS = c("bacteria", "fungi"),
-#'   SIM_TIME = 25,
-#'   perterbation_factor = 0.5
-#' )
+#' PARMSET = getPARAMS(correct_respiration(intro_comm)),
+#' IDS = c("Pred", "Prey1", "Prey2"),
+#' SIM_TIME = 25,
+#' perterbation_factor = 0.5)
 #'
 #' # Direct contributions:
 #' head(res$output_direct)
@@ -105,6 +103,7 @@ total_effect_simulate <- function(PARMSET,
   output <- vector("list", length(IDS))
   names(output) <- IDS
   output_direct <- output
+  output_baseline <- output
 
   # ---- Pre-compute baseline equilibrium direct effects ----
   y_orig <- PARMSET$yeqm
@@ -118,7 +117,7 @@ total_effect_simulate <- function(PARMSET,
     y_mod <- y_orig
     y_mod[names(y_mod) == pert_name] <- y_mod[names(y_mod) == pert_name] * perterbation_factor
 
-    # ODE integration
+    # ODE integration: Modifed start
     outputsave <- deSolve::ode(y = y_mod,
                                t = 1:SIM_TIME,
                                func = foodwebode,
@@ -132,29 +131,42 @@ total_effect_simulate <- function(PARMSET,
     stopifnot(length(baseline) == ncol(outputsave))
     stopifnot(identical(colnames(outputsave), names(baseline)))
 
+    # Extract direct effects for each element:
+    output_direct_prep <- outputsave[,grepl(paste0("^", pert_name), colnames(outputsave))]
+    colnames(output_direct_prep) = sub("^[^_]+_", "", colnames(output_direct_prep))
+    output_direct[[idd]] = as.data.frame(time = 1:SIM_TIME, output_direct_prep)
+
     # Save equilibrium direct contribution for the perturbed node
-    output_direct[[idd]] <- baseline[grepl(paste0("^", pert_name), names(baseline))]
+    output_baseline[[idd]] <- baseline[grepl(paste0("^", pert_name), names(baseline))]
 
     # Baseline-adjust (column-wise subtraction)
-    outputsave <- sweep(outputsave, MARGIN = 2, STATS = baseline, FUN = "-")
+    outputsave <- sweep(outputsave, MARGIN = 2, STATS = baseline, FUN = "-")*-1 # Because we actually want to substract with - without.
+
+
+    # Extract the suffix (second element) from each column name
+    suffix <- sub("^[^_]+_", "", colnames(outputsave))  # everything after the first underscore
+
+    # Sum across columns by suffix, per row
+    summed_by_suffix <- t(rowsum(t(outputsave), group = suffix))
 
     # Store with time
-    output[[idd]] <- as.data.frame(cbind(time = 1:SIM_TIME, outputsave))
+    output[[idd]] <- as.data.frame(cbind(time = 1:SIM_TIME, summed_by_suffix[,colnames(PARMSET$parameters$Qmat)]))
   }
 
   # ---- Combine per-node outputs; requires add_node_column() to exist ----
   output <- add_node_column(output)
+  output_direct <- add_node_column(output_direct)
 
   # ---- Compile direct contributions table ----
-  output_direct <- do.call("rbind", output_direct)
-  output_direct <- data.frame(Node = IDS, output_direct, check.names = FALSE)
-  rownames(output_direct) <- NULL
+  output_baseline <- do.call("rbind", output_baseline)
+  output_baseline <- data.frame(Node = IDS, output_baseline, check.names = FALSE)
+  rownames(output_baseline) <- NULL
 
   # Set column names to match Qmat columns (assumes alignment)
   if (!is.null(PARMSET$parameters$Qmat)) {
     qn <- colnames(PARMSET$parameters$Qmat)
-    if (!is.null(qn) && length(qn) == ncol(output_direct) - 1) {
-      colnames(output_direct) <- c("Node", qn)
+    if (!is.null(qn) && length(qn) == ncol(output_baseline) - 1) {
+      colnames(output_baseline) <- c("Node", qn)
     } else {
       warning("PARMSET$parameters$Qmat column names not used: length mismatch or NULL.")
     }
@@ -162,23 +174,6 @@ total_effect_simulate <- function(PARMSET,
     warning("PARMSET$parameters$Qmat is NULL; leaving output_direct column names as-is.")
   }
 
-  # ---- Reshape to long format for total effects ----
-  id_cols <- c("time", "Node")
-  varying_cols <- setdiff(names(output), id_cols)
-
-  output <- reshape(
-    output,
-    varying = varying_cols,
-    v.names = "value",
-    timevar = "variable",
-    times = varying_cols,
-    idvar = id_cols,
-    direction = "long"
-  )
-
-  row.names(output) <- NULL
-  output <- output[order(output$time, output$Node), ]
-
   # ---- Return ----
-  return(list(output_direct = output_direct, output_total = output))
+  return(list(output_direct = output_direct, output_total = output, output_baseline = output_baseline))
 }
