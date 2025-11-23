@@ -2,89 +2,39 @@
 % Please edit documentation in R/total_effects_simulate.R
 \name{total_effect_simulate}
 \alias{total_effect_simulate}
-\title{Simulate total effects under node-specific perturbations}
+\title{Simulate total effects under an ODE model}
 \usage{
 total_effect_simulate(
   PARMSET,
   IDS = NA,
   SIM_TIME = 10,
-  perterbation_factor = 0
+  perturbation_factor = 0,
+  ode_function = foodwebode
 )
 }
 \arguments{
-\item{PARMSET}{A list containing:
-- `yeqm`: named numeric vector of equilibrium state values.
-- `parameters`: list of parameters to pass into `foodwebode()`. Must include a matrix
-  `Qmat` used to set column names in the `output_direct` result.}
+\item{PARMSET}{A list with \code{yeqm} (named numeric vector of equilibrium states)
+and \code{parameters} (list), optionally including \code{Qmat}.}
 
-\item{IDS}{Character vector of node IDs (names in `PARMSET$yeqm`) to perturb.}
+\item{IDS}{Character vector of node names to perturb; must be present in
+\code{names(PARMSET$yeqm)}.}
 
-\item{SIM_TIME}{Integer length of the simulation in time steps (default `10`).
-The solver is called with `t = 1:SIM_TIME`.}
+\item{SIM_TIME}{Positive integer; number of time steps.}
 
-\item{perterbation_factor}{Numeric scalar multiplier applied to the chosen node's
-equilibrium state prior to simulation (default `0`). **Note:** parameter name
-is intentionally spelled as in the original code for backward compatibility.}
+\item{perturbation_factor}{Numeric scalar multiplier applied to the perturbed node’s
+equilibrium state (e.g., \code{0.9} for a 10\% decrease).}
+
+\item{ode_function}{A function implementing the ODE system. Must be compatible with
+\pkg{deSolve}’s \code{\link[deSolve]{ode}} interface:
+\code{function(t, y, parms, ...)} and should return a \emph{list} whose first element
+is the derivative vector, and that includes a named component \code{direct_effect}
+used by this function. Defaults to \code{\link{foodwebode}}.}
 }
 \value{
-A list with two elements:
-\itemize{
-  \item \code{output_direct}: A data frame with columns
-    \code{Node} and one column per element of \code{PARMSET$parameters$Qmat}, holding
-    the equilibrium direct-effect contribution of the perturbed node.
-  \item \code{output_total}: A long-format data frame with columns
-    \code{time}, \code{Node}, \code{variable}, and \code{value}, representing baseline-adjusted
-    total effects over time for each direct-effect variable and perturbed node.
-}
+A list with \code{output_direct}, \code{output_total}, and \code{output_baseline}.
 }
 \description{
-Runs a short ODE simulation applying a multiplicative perturbation to selected
-state variables (nodes) and computes the **total effect** time series relative
-to the original equilibrium, along with the **direct effect** contributions
-at equilibrium.
-
-This function:
-1. Takes an equilibrium state `PARMSET$yeqm` and parameter list `PARMSET$parameters`.
-2. For each node ID in `IDS`, scales the corresponding state by `perterbation_factor`.
-3. Integrates the ODE system via [deSolve::ode()] for `t = 1:SIM_TIME`.
-4. Extracts `direct_effect.*` outputs from `foodwebode()`, subtracts the
-   baseline equilibrium direct effect vector to obtain **total effects** over time.
-5. Returns a list containing:
-   - `output_direct`: a data frame of direct contributions (equilibrium) per perturbed node.
-   - `output_total`: a long-format data frame of total effects over time for all perturbed nodes.
-}
-\details{
-- The function assumes your ODE right-hand side function `foodwebode(time, state, parms)`
-  returns a named list with an element `direct_effect` that is a named numeric vector.
-- Columns in the ODE output prefixed with `"direct_effect."` are interpreted as the
-  direct-effect time series and are baseline-adjusted (subtracting the equilibrium direct
-  effect vector) to form total effects.
-- The helper `add_node_column()` must accept the list of per-node data frames (each with
-  a `time` column and direct-effect columns) and return a **wide** data frame that includes
-  a `Node` column identifying the perturbed node.
-}
-\section{Assumptions and checks}{
-
-- All \code{IDS} must exist in \code{names(PARMSET$yeqm)}.
-- \code{foodwebode()} must be available in scope and return \code{direct_effect}.
-- \code{PARMSET$parameters$Qmat} must have column names aligned with \code{direct_effect}.
-}
-
-\examples{
-\dontrun{
-res <- total_effect_simulate(
-PARMSET = getPARAMS(correct_respiration(intro_comm)),
-IDS = c("Pred", "Prey1", "Prey2"),
-SIM_TIME = 25,
-perterbation_factor = 0.5)
-
-# Direct contributions:
-head(res$output_direct)
-
-# Long-format total effects:
-head(res$output_total)
-}
-
+Runs a simulation of total effects using a user-supplied ODE function.
 }
 \seealso{
 [deSolve::ode()]
