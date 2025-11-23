@@ -3,7 +3,6 @@
 #' @param usin The community in which we want to calculate mineralization rates.
 #' @param selected A vector of names for which you want to calculate the direct and indirect effects. Default NULL means all of them. Useful for excluding nodes whose removal breaks the community (i.e., basal nodes)
 #' @param simulation_params The simulation parameter set to calculate the indirect effects after simulating a new equilibrium. If left at default NULL, then only indirect static effects are calculated.
-#' @param new_equilibrium Should dynamic new equilibria be calculated? TRUE or FALSE.
 #' @param simulation_time How long should the simulation last. Default of searches for stable equilibrium, if they exist.
 #' @param mod_stoich Should the simulation modify the nutrient content of detritus based on the new simulated equilibrium? TRUE or FALSE.
 #' @param extinct_threshold The equilibrium biomass where an organism should be considered extinct when simulating indirect effects. This will zero out the biomass and cause a coextinction flag. This always happens when biomass is negative.
@@ -16,7 +15,6 @@
 #'   \item{Direct}{The direct contribution to mineralization.}
 #'   \item{Indirect_static}{The indirect contribution to mineralization when the species is removed at equilibrium.}
 #'   \item{Indirect_dynamic}{The indirect contribution to mineralization when the species is removed and equilibrium is recalculated.}
-#'   #'   \item{simulation}{The indirect contribution to mineralization when the species is removed and the model is simulated over time.}
 #' }
 #' The indirect contributions are calculated as the total mineralization of the community with the trophic species minus the trophic species direct mineralization minus the total mineralization without the trophic species all divided by the total mineralizaiton with the trophic species.
 #'
@@ -28,16 +26,12 @@
 whomineralizes <- function(usin,
                            selected = NULL,
                            simulation_params = NULL,
-                           new_equilibrium = F,
                            simulation_time = NA,
                            mod_stoich = TRUE,
                            extinct_threshold = 1.5e-8,
-                           n_sim_trials = 50){
+                           n_sim_trials = 200){
   Nnodes = dim(usin$imat)[1] # Get the number of nodes
   Nnames = usin$prop$general$Carbon$ID # Get the names
-
-
-  if(new_equilibrium & Nnodes > 5) warning("Errors are very likely. Solving a system that is more than 5 nodes to a new equilibrium is computationally difficult and often produces stange errors when using the foodwebode function. Proceed with caution.")
 
   # Select only the chosen nodes:
   if(!is.null(selected)){
@@ -57,7 +51,7 @@ whomineralizes <- function(usin,
 
   output_direct = cbind(data.frame(ID = colnames(usin$imat),
                       consump = res1$consumption,
-                      basal_C_consump = rowSums(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1, drop = FALSE])),
+                      basal_C_consump = rowSums(res1$fmat$Carbon[,TLcheddar(usin$imat) == 1])),
                  mindf)
 
   rownames(output_direct) = NULL
@@ -66,7 +60,6 @@ whomineralizes <- function(usin,
   names(output_indirect_static) = Nnames
 
   output_indirect_dynamic = output_indirect_static
-  output_indirect_simulation = output_indirect_static
   # Calculate the indirect effects:
   for(rmnode in Nnames){
 
@@ -105,33 +98,31 @@ whomineralizes <- function(usin,
       # Remove node:
       sim_par_mod = removenodes_sim(simulation_params, toremove = rmnode)
 
-      # Equilibrium function:
-      equilibrium_fn <- function(state){
-        names(state) = names(sim_par_mod$yeqm)
-        foodwebode(t = 1, y = state, pars = sim_par_mod$parameters)[[1]]
-      }
+      if(is.na(simulation_time)){
+        # Try multiple starting points:
+        outputsave = vector('list', n_sim_trials)
+        for(trial in 1:n_sim_trials){
+          tempout = tryCatch(rootSolve::stode(
+            y = sim_par_mod$yeqm*stats::runif(length(sim_par_mod$yeqm), min = 0.1, max = 10),
+            func = foodwebode,
+            parms = sim_par_mod$parameters),
+            error = function(e) NULL)
 
+          if(!is.null(tempout)){ # Confirm there is an equilibrium
+            if(attr(tempout, "steady")){ # Confirm stable
+              eq_point <- tempout$y # Pull point
+              jac <- rootSolve::jacobian.full(eq_point, func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
 
-      if(new_equilibrium){
-        xstart <- matrix(stats::runif(n_sim_trials*length(sim_par_mod$yeqm), min = 0, max = 10), ncol = length(sim_par_mod$yeqm))  # 100 guesses for the variables
+              eigenvalues <- eigen(jac)$values
 
-        ans <- nleqslv::searchZeros(xstart, equilibrium_fn, method = "Broyden", global = "dbldog")
-
-
-        outputsave = ans$x
-
-        # Get the stability:
-        if(!all(is.null(outputsave))){
-          colnames(outputsave) = names(sim_par_mod$yeqm)
-          stab = rep(NA, nrow(outputsave))
-          for(ii in 1:length(stab)){
-            jac <- rootSolve::jacobian.full(outputsave[1,], func = foodwebode, parms = sim_par_mod$parameters) # Get Jacobian
-
-            eigenvalues <- eigen(jac)$values
-
-            stab[ii] = all(Re(eigenvalues) < 0)
+              if(all(Re(eigenvalues) < 0)){
+                outputsave[[trial]] = tempout
+              }
+            }
           }
         }
+
+        outputsave = do.call("rbind",lapply(outputsave, function(X) X$y))
 
         if(any(is.null(outputsave))){
           warning(paste("Simulation for the indirect effect of", rmnode, "not converging. Results may be wrong."))
@@ -149,7 +140,7 @@ whomineralizes <- function(usin,
             coextinct = apply(outputsave,1,min) < extinct_threshold
 
             if(dim(outputsave)[1] == 0){
-              warning(paste("Simulation for the indirect effect of", rmnode, "found no positive equilibria."))
+              warning(paste("Simulation for the indirect effect of", rmnode, "found no stable, positive equilibria."))
             }else{
               indirect_dynamic_min = vector(mode = "list", length = dim(outputsave)[1])
 
@@ -223,9 +214,8 @@ whomineralizes <- function(usin,
             }
           }
         }
-      }
+      }else{
 
-      if(!is.na(simulation_time)){
         if(!is.numeric(simulation_time) & length(simulation_time) !=1) stop("simulation_time must be numeric and length of 1.")
         outputsave = tempout = tryCatch(deSolve::ode(
           y = sim_par_mod$yeqm,
@@ -237,7 +227,7 @@ whomineralizes <- function(usin,
         # Flux without the node:
         indirect_dynamic = cbind(data.frame(min_Carbon = rowSums(outputsave[,grepl("totalrespsave", colnames(outputsave))])),
 
-                                 outputsave[,grepl("dinorganic", colnames(outputsave)) & !grepl("Carbon", colnames(outputsave))])
+                           outputsave[,grepl("dinorganic", colnames(outputsave)) & !grepl("Carbon", colnames(outputsave))])
 
         indirect_dynamic = sweep(-indirect_dynamic, 2,
                                  as.numeric(colSums(mindf) - mindf[rmnode,]), # Flux with the node minus flux from the node.
@@ -256,7 +246,7 @@ whomineralizes <- function(usin,
             sum((cur_consumption*matrix(data = cur_time[1,colnames(cur_time) %in% colnames(cur_consumption)], nrow = ncol(cur_consumption),ncol = ncol(cur_consumption))*matrix(data = cur_time[1,colnames(cur_time) %in% colnames(cur_consumption)], nrow = ncol(cur_consumption),ncol = ncol(cur_consumption), byrow = T))[,TLcheddar(sim_par_mod$parameters$cij) == 1]) # Flux without the node
         }
 
-        output_indirect_simulation[[rmnode]] =
+        output_indirect_dynamic[[rmnode]] =
           cbind(
             cbind(
               cbind(
@@ -264,13 +254,9 @@ whomineralizes <- function(usin,
               outputsave[,!grepl("totalrespsave", colnames(outputsave)) & !grepl("dinorganic", colnames(outputsave))]),
             NAME = 0, basal_C_consump = basal_C_consump_dynamic)
 
-        colnames(output_indirect_simulation[[rmnode]])[colnames(output_indirect_simulation[[rmnode]]) == "NAME"] = rmnode
+                                                  colnames(output_indirect_dynamic[[rmnode]])[colnames(output_indirect_dynamic[[rmnode]]) == "NAME"] = rmnode
       }
-
-      }
-
-
-
+    }
   }
 
   # Clean up data for export:
@@ -291,11 +277,7 @@ whomineralizes <- function(usin,
 
     rownames(output_indirect_dynamic) = NULL
 
-    output_indirect_simulation = do.call("rbind",output_indirect_simulation)
-
-    rownames(output_indirect_simulation) = NULL
-
-    output = list(static = rbind(output_direct, output_indirect_static), dynamic = output_indirect_dynamic, simulation = output_indirect_simulation)
+    output = list(static = rbind(output_direct, output_indirect_static), dynamic = output_indirect_dynamic)
   }else{
     output = rbind(output_direct, output_indirect_static)
   }

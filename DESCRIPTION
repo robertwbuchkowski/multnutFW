@@ -16,8 +16,7 @@ Imports:
   stringr (>= 1.5.1),
   diagram (>= 1.6.5),
   rootSolve (>= 1.8.2.4),
-  deSolve (>= 1.40),
-  nleqslv (>= 3.3.5)
+  deSolve (>= 1.40)
 Depends: 
     R (>= 3.5)
 Suggests: 
