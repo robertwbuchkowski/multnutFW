@@ -90,7 +90,7 @@ total_effect_simulate <- function(PARMSET,
     output_baseline[[idd]] <- baseline[grepl(paste0("^", pert_name), names(baseline))]
 
     # Baseline-adjust (column-wise subtraction)
-    outputsave <- sweep(outputsave, MARGIN = 2, STATS = baseline, FUN = "-")*-1 # Because we actually want to substract with - without.
+    outputsave <- sweep(outputsave, MARGIN = 2, STATS = baseline, FUN = "-")*-1 # Because we actually want to subtract with - without.
 
 
     # Extract the suffix (second element) from each column name
