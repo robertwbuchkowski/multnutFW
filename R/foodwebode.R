@@ -107,38 +107,45 @@ foodwebode <- function(t,y,pars){
   netwithrespiration = netwithoutmineralization -
     matrix(c(pars$ECarbon*ymat[,1], rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
 
+
+  # netwithrespiration and Qmat are numeric matrices with same dimensions and column names
+
+  ratios <- netwithrespiration / Qmat  # element-wise division
+
+
+  mineralization_0 = sweep(ratios, 1, netwithrespiration[,1], "-")
+
+  # Remove cases of immobilization:
+  mineralization_0 = mineralization_0*(1-pars$canIMMmat)
+
+  overflow_resp = -1* apply(mineralization_0, 1, min)
+
+  # Remove this for detritus and nodes that can immobilize nutrients:
+  overflow_resp[det_idx] = 0
+
+  # Remove the overflow respiration:
+  netwithrespiration[,1] = netwithrespiration[,1] - overflow_resp
+
   # Calculate mineralization/immobilization:
-  mineralization = netwithrespiration - netwithrespiration[,1]/Qmat
-
-  # immobilization = -pars$canIMMmat*netwithoutmineralization
-  # immobilization[immobilization < 0] = 0
-  #
-  # # Add in immobilized nutrients:
-  # netwithoutmineralization = netwithoutmineralization + immobilization
-
-  # Remove detritus mineralization (does not exhibit this stoichiometry):
+  mineralization = netwithrespiration - (netwithrespiration[,1]*Qmat)
 
   mineralization[which(det_idx),] = 0
-
-  # Calculate changes in inorganic pools:
-  # dinorganic = colSums(mineralization) - colSums(immobilization)
 
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
 
   D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
+  # Confirm the correct stoichiometry:
+  if(max(sweep(netwithmineralization, 1,netwithmineralization[,1], "/")[!det_idx,] - Qmat[!det_idx,], na.rm = T) > sqrt(.Machine$double.eps)) warning("Error in stoichiometry")
 
+  output_direct_effects = mineralization
 
-  # totalrespsave = -actualresp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
+  output_direct_effects[,1] = pars$ECarbon*ymat[,1] + overflow_resp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
 
-  # output_direct_effects = mineralization - immobilization
-  #
-  # output_direct_effects[,1] = totalrespsave
-  #
-  # output_direct_effects_v <- as.vector(output_direct_effects)
-  #
-  # names(output_direct_effects_v) <- as.vector(outer(rownames(output_direct_effects), colnames(output_direct_effects), paste, sep = "_"))
+  output_direct_effects_v <- as.vector(output_direct_effects)
+
+  names(output_direct_effects_v) <- as.vector(outer(rownames(output_direct_effects), colnames(output_direct_effects), paste, sep = "_"))
 
   #===========================#
   #  Conduct tracer analysis  #
@@ -166,9 +173,9 @@ foodwebode <- function(t,y,pars){
 
     fluxTINPUT = pars$tracer
 
-    fluxTRESP = actualresp*tracer13C*1 # Can put fractionation here.
+    fluxTRESP = (pars$ECarbon*ymat[,1] + overflow_resp)*tracer13C*1 # Can put fractionation here.
 
-    fluxTRESPtotal = -fluxTRESP + (1-pars$pmat[,1])*rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
+    fluxTRESPtotal = fluxTRESP + (1-pars$pmat[,1])*rowSums(pars$assimilation$Carbon*fluxTCONSUMP)
 
     # Net tracer fluxes throughout the food web:
     nettracer =
@@ -184,20 +191,18 @@ foodwebode <- function(t,y,pars){
       fluxTDEATH +
       # Detritus recycling:
       fluxTFAECES +
-      fluxTCARCASS + # positive b/c resp already negative
+      fluxTCARCASS -
       # Respiration loss:
       fluxTRESP
 
 
     dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
     names(dy) = names(y)
-    return(list(dy, dinorganic = dinorganic, direct_effect =  output_direct_effects, fluxTRESPtotal = fluxTRESPtotal))
-
+    return(list(dy, direct_effect =  output_direct_effects_v, fluxTRESPtotal = fluxTRESPtotal))
 
   }else{
     dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
     names(dy) = names(y)
-    return(list(dy))
-    # return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects_v))
+    return(list(dy, direct_effect =  output_direct_effects_v))
     }
   }
