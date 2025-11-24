@@ -103,89 +103,25 @@ foodwebode <- function(t,y,pars){
     fluxFAECES +
     fluxCARCASS
 
-  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    immobilization = -pars$canIMMmat*netwithoutmineralization
-    immobilization[immobilization < 0] = 0
-  }else{
-    stop("not working yet")
-    # Assign the inorganic nutrient pools:
-    inorganicSV = y[c((nrow(pars$pmat)*ncol(pars$pmat))+1):length(y)]
+  # Remove minimum respiration based on biomass:
+  netwithrespiration = netwithoutmineralization -
+    matrix(c(pars$ECarbon*ymat[,1], rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
 
-    # Calculate the total amount of inorganic nutrient available to the food web:
-    netinog = inorganicSV + pars$inorganicinputs - inorganicSV*pars$inorganicloss
-
-    immobilization = -pars$canIMMmat*netwithoutmineralization
-    immobilization[immobilization < 0] = 0
-
-    n_groups <- nrow(immobilization)
-    n_nutrients <- ncol(immobilization)
-
-    allocation <- matrix(0, nrow = n_groups, ncol = n_nutrients)
-
-    for (j in seq_len(n_nutrients)) {
-      nutrient_available <- netinog[j]
-      nutrient_demand <- immobilization[, j]
-      total_demand <- sum(nutrient_demand)
-
-      if (nutrient_available >= total_demand) {
-        # Enough nutrient to meet all demand
-        allocation[, j] <- nutrient_demand
-      } else {
-        stop("Not working yet.")
-        # Not enough nutrient: allocate by biomass weight
-        weights <- ymat[,1] / sum(ymat[,1])
-        alloc <- weights * nutrient_available
-        allocation[, j] <- pmin(alloc, nutrient_demand)
-
-        # Optional: redistribute remainder if some demand is still unmet
-        remainder <- nutrient_available - sum(allocation[, j])
-        if (remainder > 0) {
-          unmet <- nutrient_demand - allocation[, j]
-          unmet_weights <- ifelse(unmet > 0, ymat[,1], 0)
-          if (sum(unmet_weights) > 0) {
-            unmet_weights <- unmet_weights / sum(unmet_weights)
-            allocation[, j] <- allocation[, j] + unmet_weights * remainder
-            allocation[, j] <- pmin(allocation[, j], nutrient_demand)
-          }
-        }
-      }
-    }
-    immobilization = allocation
-  }
-
-  # Add in immobilized nutrients:
-  netwithoutmineralization = netwithoutmineralization + immobilization
-
-  # Minimum respiration based on biomass:
-  minresp = pars$ECarbon*ymat[,1]
-
-  # Apply stoichiometry to get actual carbon mineralization:
-  actualresp = pmin(-minresp,
-                    apply(netwithoutmineralization*Qmat # Convert all losses to carbon
-                          -netwithoutmineralization[,1], # Subtract net carbon gain or loss
-                          1, min) # Get the minimum required respiration
-  ) # Take either the basal respiration rate or the minimum respiration rate from nutrient limitation.
-
-  # Remove detritus respiration if created:
-  actualresp[which(det_idx)] = 0
-
-  totalrespsave = -actualresp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
-
-  netwithrespiration = netwithoutmineralization + # Positive because respiration is already negative.
-    matrix(c(actualresp, rep(0, nrow(ymat)*(ncol(ymat)-1))), nrow = nrow(ymat), ncol = ncol(ymat))
-
+  # Calculate mineralization/immobilization:
   mineralization = netwithrespiration - netwithrespiration[,1]/Qmat
+
+  # immobilization = -pars$canIMMmat*netwithoutmineralization
+  # immobilization[immobilization < 0] = 0
+  #
+  # # Add in immobilized nutrients:
+  # netwithoutmineralization = netwithoutmineralization + immobilization
 
   # Remove detritus mineralization (does not exhibit this stoichiometry):
 
   mineralization[which(det_idx),] = 0
 
   # Calculate changes in inorganic pools:
-  if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-    dinorganic = colSums(mineralization) - colSums(immobilization)
-  }else{
-    dinorganic = colSums(mineralization) - colSums(immobilization) + pars$inorganicinputs - inorganicSV*pars$inorganicloss
-  }
+  # dinorganic = colSums(mineralization) - colSums(immobilization)
 
   # Calculate the net changes with mineralization:
   netwithmineralization = netwithrespiration - mineralization
@@ -193,13 +129,16 @@ foodwebode <- function(t,y,pars){
   D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
 
-  output_direct_effects = mineralization - immobilization
 
-  output_direct_effects[,1] = totalrespsave
+  # totalrespsave = -actualresp + (1-pars$pmat[,1])*rowSums(pars$assimilation[[1]]*consumption[[1]])
 
-  output_direct_effects_v <- as.vector(output_direct_effects)
-
-  names(output_direct_effects_v) <- as.vector(outer(rownames(output_direct_effects), colnames(output_direct_effects), paste, sep = "_"))
+  # output_direct_effects = mineralization - immobilization
+  #
+  # output_direct_effects[,1] = totalrespsave
+  #
+  # output_direct_effects_v <- as.vector(output_direct_effects)
+  #
+  # names(output_direct_effects_v) <- as.vector(outer(rownames(output_direct_effects), colnames(output_direct_effects), paste, sep = "_"))
 
   #===========================#
   #  Conduct tracer analysis  #
@@ -250,26 +189,15 @@ foodwebode <- function(t,y,pars){
       fluxTRESP
 
 
-    if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-      dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
-      names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, direct_effect =  output_direct_effects, fluxTRESPtotal = fluxTRESPtotal))
-    }else{
-      stop("not working yet")
-      dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
-      names(dy) = names(y)
-      return(list(dy))
-    }
+    dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
+    names(dy) = names(y)
+    return(list(dy, dinorganic = dinorganic, direct_effect =  output_direct_effects, fluxTRESPtotal = fluxTRESPtotal))
+
+
   }else{
-    if(any(is.na(c(pars$inorganicinputs,pars$inorganicloss)))){
-      dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
-      names(dy) = names(y)
-      return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects_v))
-    }else{
-      stop("not working yet")
-      dy = c(netwithmineralization[,1],D_element_biomass, dinorganic)
-      names(dy) = names(y)
-      return(list(dy))
+    dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
+    names(dy) = names(y)
+    return(list(dy))
+    # return(list(dy, dinorganic = dinorganic, totalrespsave = totalrespsave, direct_effect =  output_direct_effects_v))
     }
-  }
   }
