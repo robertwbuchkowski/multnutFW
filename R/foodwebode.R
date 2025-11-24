@@ -166,12 +166,19 @@ foodwebode <- function(t,y,pars){
 
   if(!any(is.na(pars$tracer))){
 
-    # Calculate the carbon proportion in the tracer:
-    tracer13C = yunstd[
-      (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + 1):
-        (nrow(pars$pmat)+sum(pars$detplant$isDetritus)*(ncol(pars$pmat)-1) + nrow(pars$pmat))]/ymat[,1]
+    # Compute tracer13C safely
+    denominator <- pmax(ymat[, 1], eps)
+    if(any(denominator == eps)) warning("Traced pool hitting minimum value.")
 
-    if(any(tracer13C > 1)) warning("Tracer should not be able to exceed 100% of the the pool size, but is during this simulation.")
+    tracer13C <- yunstd[
+      (nrow(pars$pmat) + sum(pars$detplant$isDetritus) * (ncol(pars$pmat) - 1) + 1):
+        (nrow(pars$pmat) + sum(pars$detplant$isDetritus) * (ncol(pars$pmat) - 1) + nrow(pars$pmat))
+    ] / denominator
+
+    # Check for values exceeding 1 (ignoring NA/Inf)
+    if (any(tracer13C > 1 & is.finite(tracer13C))) {
+      warning("Tracer should not exceed 100% of the pool size, but does during this simulation.")
+    }
 
     fluxTCONSUMP = consumption[[1]]*
       matrix(tracer13C, nrow = nrow(consumption[[1]]), ncol = ncol(consumption[[1]]), byrow = T)
