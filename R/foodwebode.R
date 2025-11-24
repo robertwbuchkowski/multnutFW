@@ -137,7 +137,20 @@ foodwebode <- function(t,y,pars){
   D_element_biomass = (netwithmineralization[which(det_idx),-1])
 
   # Confirm the correct stoichiometry:
-  if(max(sweep(netwithmineralization, 1,netwithmineralization[,1], "/")[!det_idx,] - Qmat[!det_idx,], na.rm = T) > sqrt(.Machine$double.eps)) warning("Error in stoichiometry")
+  # Define machine precision threshold
+  eps <- .Machine$double.eps
+
+  # Identify rows where all values in netwithrespiration are below sqrt(eps) and also don't have a detritus pool.
+  valid_rows <- rowSums(abs(netwithmineralization) > sqrt(eps)) > 0 & !det_idx
+
+  # Perform the check only on valid rows
+  if(any(valid_rows)){
+    if (max(abs((netwithmineralization[,1]*Qmat - netwithmineralization)[valid_rows,]),
+            na.rm = TRUE)
+     > sqrt(eps)) {
+      warning("Error in stoichiometry")
+    }
+  }
 
   output_direct_effects = mineralization
 
