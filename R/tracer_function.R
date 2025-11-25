@@ -256,5 +256,9 @@ prepare_tracer_inputs <- function(main_parms = NULL, tracer_init = NULL, tracer_
   # Check to make sure the time columns line up:
   if(all(main_out_full[,1] != tracer_output[,1])) stop("Main output and tracer columns are not lining up. Please check the function.")
 
+  # Rescale the variables into their original units:
+  main_out_full[,2:(length(main_parms$eqmStandard) + 1)] = main_out_full[,2:(length(main_parms$eqmStandard) + 1)]*matrix(main_parms$eqmStandard, ncol = length(main_parms$eqmStandard), nrow = nrow(main_out_full), byrow = T)
+
+
   cbind(main_out_full, tracer_output[,-1])
 }
