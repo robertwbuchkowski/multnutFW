@@ -5,26 +5,26 @@
 \title{Prepare tracer simulation inputs from main ODE output}
 \usage{
 prepare_tracer_inputs(
-  main_out,
-  main_parms,
-  tracer_init,
-  tracer_input_proportion = NULL
+  main_parms = NULL,
+  tracer_init = NULL,
+  tracer_input_proportion = NULL,
+  SIM_TIME = 1:10,
+  eqm_mod = NULL
 )
 }
 \arguments{
-\item{main_out}{matrix/data.frame from deSolve::ode() using foodwebode WITHOUT tracer}
+\item{main_parms}{list of parameters used in the main simulation. Comes from getPARAMS function.}
 
-\item{main_parms}{list of parameters used in the main simulation}
-
-\item{tracer_init}{named numeric vector of initial tracer stocks (length = nrow(main_parms$pmat))}
+\item{tracer_init}{named numeric vector of initial tracer proportions in the biomass at the equilibrium in main_parms (length = nrow(main_parms$pmat))}
 
 \item{tracer_input_proportion}{the proportion of tracer in input fluxes}
+
+\item{SIM_TIME}{The simulation time if main_out is NULL.}
+
+\item{eqm_mod}{The equilibrium modification if main_out is NULL. It is a vector the same length as the number of state variables.}
 }
 \value{
-list with elements:
-        - tracer_func: function(t, y, parms) for deSolve
-        - tracer_parms: parameter list including main_out and interpolation cache
-        - tracer_init: initial tracer state vector
+The tracer simulation over the same time period as main_out.
 }
 \description{
 Prepare tracer simulation inputs from main ODE output

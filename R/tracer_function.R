@@ -27,8 +27,8 @@ tracer_function <- function(t, y, pars) {
     # Build once; keep names for direct access
     state_names <- colnames(main_out)[-1]        # exclude "time"
     times_vec   <- main_out[, "time"]
-    state_interps <- setNames(
-      lapply(state_names, function(sn) approxfun(times_vec, main_out[, sn], method = "linear", rule = 2)),
+    state_interps <- stats::setNames(
+      lapply(state_names, function(sn) stats::approxfun(times_vec, main_out[, sn], method = "linear", rule = 2)),
       state_names
     )
     # Cache into pars (deSolve will pass it back each step)
@@ -191,20 +191,34 @@ tracer_function <- function(t, y, pars) {
 
 #' Prepare tracer simulation inputs from main ODE output
 #'
-#' @param main_out  matrix/data.frame from deSolve::ode() using foodwebode WITHOUT tracer
-#' @param main_parms list of parameters used in the main simulation
-#' @param tracer_init named numeric vector of initial tracer stocks (length = nrow(main_parms$pmat))
+#' @param main_parms list of parameters used in the main simulation. Comes from getPARAMS function.
+#' @param tracer_init named numeric vector of initial tracer proportions in the biomass at the equilibrium in main_parms (length = nrow(main_parms$pmat))
 #' @param tracer_input_proportion the proportion of tracer in input fluxes
-#' @return list with elements:
-#'         - tracer_func: function(t, y, parms) for deSolve
-#'         - tracer_parms: parameter list including main_out and interpolation cache
-#'         - tracer_init: initial tracer state vector
+#' @param SIM_TIME The simulation time if main_out is NULL.
+#' @param eqm_mod The equilibrium modification if main_out is NULL. It is a vector the same length as the number of state variables.
+#' @return The tracer simulation over the same time period as main_out.
 #' @export
-prepare_tracer_inputs <- function(main_out, main_parms, tracer_init, tracer_input_proportion = NULL) {
+prepare_tracer_inputs <- function(main_parms = NULL, tracer_init = NULL, tracer_input_proportion = NULL, SIM_TIME = 1:10, eqm_mod = NULL) {
+
+  # y values:
+  y_val = main_parms$yeqm
+  main_parms = main_parms$parameters
+
+  if(is.null(eqm_mod)){
+    eqm_mod = rep(1, length(main_parms$eqmStandard))
+  }
+  main_out_full = deSolve::ode(
+    y = y_val*eqm_mod,
+    times = SIM_TIME,
+    func = foodwebode,
+    parms = main_parms
+  )
+  main_out = main_out_full[,1:(length(main_parms$eqmStandard) + 1)]
+
   # Validate main_out
   if (!"time" %in% colnames(main_out)) stop("main_out must include a 'time' column.")
 
-  if(all(colnames(main_out)[-1] != colnames(main_parms$cij))) stop("main_out must only include the state variables, not the extra values")
+  if(all(colnames(main_out)[-1] != names(main_parms$eqmStandard))) stop("main_out must only include the state variables, not the extra values")
 
   main_parms$main_out = main_out
 
@@ -216,8 +230,8 @@ prepare_tracer_inputs <- function(main_out, main_parms, tracer_init, tracer_inpu
   # Build interpolation functions for speed
   times_vec <- main_out[, "time"]
   state_names <- colnames(main_out)[-1]  # exclude time
-  state_interps <- setNames(
-    lapply(state_names, function(sn) approxfun(times_vec, main_out[, sn], method = "linear", rule = 2)),
+  state_interps <- stats::setNames(
+    lapply(state_names, function(sn) stats::approxfun(times_vec, main_out[, sn], method = "linear", rule = 2)),
     state_names
   )
   main_parms$state_interps <- state_interps
@@ -227,14 +241,20 @@ prepare_tracer_inputs <- function(main_out, main_parms, tracer_init, tracer_inpu
     stop("tracer_init must have length equal to number of nodes (nrow(main_parms$pmat)).")
   }
 
+  # Tracer stocks:
+  tracer_stocks = tracer_init*main_parms$eqmStandard[1:length(tracer_init)]
+
   # Run the ode:
-  deSolve::ode(y = tracer_init, times = c(main_out[,1]),
+  tracer_output = deSolve::ode(y = tracer_stocks, times = c(main_out[,1]),
                func = tracer_function, parms = main_parms)
 
-  # # Return everything needed for deSolve
-  # list(
-  #   tracer_func = tracer_function,   # the full tracer function we wrote earlier
-  #   tracer_parms = main_parms,
-  #   tracer_init = tracer_init
-  # )
+  # Mark the tracer pools to combine cleanly:
+  tocn = colnames(tracer_output)
+  tocn[!grepl("fluxTRESPtotal",tocn)] = paste0(tocn[!grepl("fluxTRESPtotal",tocn)], "_tracer")
+  colnames(tracer_output) = tocn
+
+  # Check to make sure the time columns line up:
+  if(all(main_out_full[,1] != tracer_output[,1])) stop("Main output and tracer columns are not lining up. Please check the function.")
+
+  cbind(main_out_full, tracer_output[,-1])
 }
