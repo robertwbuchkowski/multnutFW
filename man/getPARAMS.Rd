@@ -15,6 +15,7 @@ getPARAMS(
   inorganicinputs = NA,
   inorganicloss = NA,
   forcepositive = FALSE,
+  zerosmallchange = NA,
   tracer = NA
 )
 }
@@ -38,6 +39,8 @@ getPARAMS(
 \item{inorganicloss}{A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.}
 
 \item{forcepositive}{A TRUE/FALSE parameter that determine if the system of equations zeros any negative pools at each time step. This can be helpful for simulations of complex systems.}
+
+\item{zerosmallchange}{If NA there is no effect. If a value is given, any absolute change less than this is set ot zero. Useful for avoiding drift.}
 
 \item{tracer}{Should a tracer for carbon be included in the model? If default NA, then there is no tracer. Otherwise, a data frame that has the number of rows to match the number of nodes in the food web and two columns. The first column contains the input proportions of carbon, while the second contains the biomass proportions of carbon.}
 }

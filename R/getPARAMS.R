@@ -10,6 +10,7 @@
 #' @param inorganicinputs A vector of inputs for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param inorganicloss A vector of loss rates for the inorganic nutrients. If it is NA, then the inorganic pools are not tracked by the parameter set and the simulation will track net changes in inorganic nutrients by setting inputs and outputs to NA.
 #' @param forcepositive A TRUE/FALSE parameter that determine if the system of equations zeros any negative pools at each time step. This can be helpful for simulations of complex systems.
+#' @param zerosmallchange If NA there is no effect. If a value is given, any absolute change less than this is set ot zero. Useful for avoiding drift.
 #' @param tracer Should a tracer for carbon be included in the model? If default NA, then there is no tracer. Otherwise, a data frame that has the number of rows to match the number of nodes in the food web and two columns. The first column contains the input proportions of carbon, while the second contains the biomass proportions of carbon.
 #' @return A list with two elements:(1) a vector of equilibrium biomasses that can be modified and passed to the simulator, and (2) a vector of parameters to run the model away from equilibrium.
 #' @details
@@ -37,6 +38,7 @@ getPARAMS <- function(usin,
                       inorganicinputs = NA,
                       inorganicloss = NA,
                       forcepositive = FALSE,
+                      zerosmallchange = NA,
                       tracer = NA){
 
   # Set the diet limits if they are not included
@@ -262,6 +264,7 @@ getPARAMS <- function(usin,
                      inorganicinputs = inorganicinputs,
                      inorganicloss = inorganicloss,
                      forcepositive = ifelse(forcepositive, 1,0),
+                     zerosmallchange = zerosmallchange,
                      tracer = tracer,
                      eqmStandard = yeqm)))
 

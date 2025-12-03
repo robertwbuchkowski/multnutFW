@@ -217,7 +217,7 @@ foodwebode <- function(t,y,pars){
 
 
     dy = c(netwithmineralization[,1],D_element_biomass, nettracer)/pars$eqmStandard
-    if(pars$forcepositive == 1) dy[abs(dy) < 1e-8] <- 0
+    if(!is.na(pars$zerosmallchange)) dy[abs(dy) < pars$zerosmallchange] <- 0
     names(dy) = names(y)
     return(list(dy, direct_effect =  output_direct_effects_v, fluxTRESPtotal = fluxTRESPtotal))
 
@@ -225,7 +225,7 @@ foodwebode <- function(t,y,pars){
 
     dy = c(netwithmineralization[,1],D_element_biomass)/pars$eqmStandard
 
-    if(pars$forcepositive == 1) dy[abs(dy) < 1e-8] <- 0
+    if(!is.na(pars$zerosmallchange)) dy[abs(dy) < pars$zerosmallchange] <- 0
     names(dy) = names(y)
     return(list(dy, direct_effect =  output_direct_effects_v))
     }
